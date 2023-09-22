@@ -125,6 +125,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(80), nullable=False, default='user')
     email = db.Column(db.String(80), unique=True, nullable=False)
+    language = db.Column(db.String(20), default='EN')
+    preferences = db.Column(JSON, default=[])
 
     trainings = relationship('UserTraining', back_populates='user')
 
@@ -164,7 +166,15 @@ class UserTrainingExercise(db.Model):
     exercise = relationship('Exercise', back_populates='user_training_exercises')
 
 
+class Localization(db.Model):
+    __tablename__ = 'localization'
+    id = Column(Integer, primary_key=True)
+    key = db.Column(db.String(255), unique=True)
+    sector = db.Column(db.String(50))
+    translations = Column(db.Text)
 
+    def __repr__(self):
+        return f'Translation: {self.id}'
 
 
 if __name__ == '__main__':

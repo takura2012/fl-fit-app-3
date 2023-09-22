@@ -5,7 +5,7 @@ from collections import Counter
 import json
 import config
 from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, \
-    Training, UserTraining, UserTrainingExercise, Plan_Trainings
+    Training, UserTraining, UserTrainingExercise, Plan_Trainings, Localization
 from sqlalchemy import Column, Integer, String, ForeignKey, and_, or_
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -27,9 +27,17 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+# Добавление local_dict к контексту приложения
+@app.context_processor
+def inject_local_dict():
+    local_dict = load_localization_dict()
+    return {'local_dict': local_dict}
 
 
 @app.route('/user_login', methods=['POST', 'GET'])
@@ -43,6 +51,7 @@ def user_login():
 
         if user and check_password_hash(user.password, password):
             login_user(user)
+            get_language_dict()
             return redirect(url_for('index'))
 
         flash('Ошибка входа', 'danger')
@@ -879,14 +888,22 @@ def train_progress_start():
 
         # нужно найти user-train-exercise
         user_training = UserTraining.query.filter_by(user_id=user_id, training_id=train_id, assigned=True, completed=False).first()
+
+        user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training.id).all()
+
         user_training_exercise = UserTrainingExercise.query.filter_by(user_training_id=user_training.id, completed=False).first()
+
+        position = user_training_exercises.index(user_training_exercise)
+        ex_count = len(user_training_exercises)
+        progress_percent = round(position/ex_count*100)
 
         exercise = Exercise.query.get(user_training_exercise.exercise_id)
         previous_weight = find_prev_weight(exercise.exercise_id, user_id)
         max_weight = find_max_weight(exercise.exercise_id, user_id)
 
     return render_template('current_exercise.html', exercise=exercise, previous_weight=previous_weight,
-                           user_training=user_training, user_training_exercise=user_training_exercise, max_weight=max_weight)
+                           user_training=user_training, user_training_exercise=user_training_exercise,
+                           max_weight=max_weight, progress_percent=progress_percent)
 
 
 @app.route('/train_progress_next', methods=['POST', 'GET'])
@@ -896,6 +913,10 @@ def train_progress_next():
         user_training_exercise_id = request.form.get('user_training_exercise_id')
         user_training_id = request.form.get('user_training_id')
         weight = request.form.get('weight', 0)
+        try:
+            weight = int(weight)
+        except:
+            weight = 0
         user_training_exercise = UserTrainingExercise.query.get(user_training_exercise_id)
         user_training_exercise.completed = True
         user_training_exercise.weight = weight
@@ -1071,12 +1092,13 @@ def statistics_exercises():
 @app.route('/personal')
 def personal():
     account_types = config.ACCOUNT_TYPES_RU
-
+    languages = config.LANGUAGES
     if not current_user:
         return render_template('management.html')
     user_account_type = account_types[current_user.role]
     account_color = config.ACCOUNT_COLORS[current_user.role]
-    return render_template('personal.html', user=current_user, user_account_type=user_account_type, account_color=account_color)
+    return render_template('personal.html', user=current_user, user_account_type=user_account_type,
+                           account_color=account_color, languages=languages)
 
 
 @app.route('/change_password', methods=['POST', 'GET'])
@@ -1107,6 +1129,16 @@ def change_password():
 
     return redirect(url_for('personal'))
 
+
+@app.route('/language_change/<string:lng>')
+def language_change(lng):
+    current_user.language = lng
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        return 'Ошибка при смене языка'
+    return redirect(url_for('personal'))
 
 @app.route('/restore_account', methods=['POST', 'GET'])
 def restore_account():
@@ -1158,12 +1190,83 @@ def ajax_plan_training_view():
     return render_template('/divs/plan_trainings_div.html', response=response)
 
 
+@app.route('/account')
+def account():
 
+    return render_template('account.html')
+
+
+# --------------------------LOCALIZATION--------------------------------------------
+@app.route('/localization', methods=['POST', 'GET'])
+def localization():
+    languages = config.LANGUAGES
+    sectors = config.SECTORS
+    phrase_dict = {}
+
+    phrases = Localization.query.all()
+    phrases_list = []
+    for phrase in phrases:
+        translations_dict = json.loads(phrase.translations)
+        phrases_list.append([phrase.key, translations_dict])
+
+
+
+
+    if request.method == 'GET':
+        phrase_key = request.args.get('key', '')
+
+        phrase_obj = Localization.query.filter_by(key=phrase_key).first()
+        if phrase_obj:
+            phrase_dict = json.loads(phrase_obj.translations)
+            sector = phrase_obj.sector
+
+
+
+    if request.method == 'POST':
+        phrase_key = request.form.get('key', '')
+        sector = request.form.get('sector', '')
+
+
+        for lang in languages:
+            phrase_dict[lang] = request.form.get('local_input_'+lang, '')
+
+
+        phrase = Localization.query.filter_by(key=phrase_key).first()
+        if phrase:
+            phrase.translations = json.dumps(phrase_dict)
+            phrase.sector = sector
+        else:
+            localized_phrase = Localization(key=phrase_key, sector=sector, translations=json.dumps(phrase_dict))
+            db.session.add(localized_phrase)
+            phrases_list.append([phrase_key, phrase_dict])
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            return 'Ошибка при записи локализации'
+
+
+
+
+    return render_template('localization.html', languages=languages, phrases_list=phrases_list, phrase_dict=phrase_dict,
+                               phrase_key=phrase_key, sectors=sectors, sector=sector)
+
+
+
+
+
+
+@app.route('/localization_load_phrase/<string:key>')
+def localization_load_phrase(key):
+
+    return redirect(url_for('localization', key=key))
 
 
 if __name__ == '__main__':
 
     # with app.app_context():
+        # local_dict = load_localization_dict()
+
     #     try:
     #         db.create_all()
     #     except Exception as e:

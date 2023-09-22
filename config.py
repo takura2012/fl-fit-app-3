@@ -19,10 +19,10 @@ ACCOUNT_COLORS = {
 }
 
 ACCOUNT_TYPES_RU = {
-    'user': 'Обычный аккаунт',
-    'paid_user': 'Оплаченный аккаунт',
-    'premium': 'Премиум аккаунт',
-    'admin': 'Администратор'
+    'user': 'Registered',
+    'paid_user': 'Paid',
+    'premium': 'Premium',
+    'admin': 'Administrator'
 }
 
 TRAINING_LEVELS = {
@@ -90,3 +90,6 @@ GROUPS = {
         'Legs':['Ноги'],
         'legs_glutes': ['Ноги', 'Ягодицы']
           }
+
+LANGUAGES = ['EN', 'RU', 'UA', 'PL']
+SECTORS = ['Application', 'Exercises', 'Trainings', 'Plans']

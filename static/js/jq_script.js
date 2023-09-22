@@ -63,24 +63,34 @@ $(document).ready(function() {
         $(this).closest('.custom-flash-warning').remove();
     });
 
-//        $.ajax({
-//            url: '/statistics/exercises',
-//            method: 'GET',
-//            contentType: 'application/json',
-//            data: {
-//                user_id: $('#user_id').val(),
-//                trains_count: $('#trains_count').val(),
-//                noweight_checkbox: $(this).prop('checked')
-//            },
-//            success: function(response) {
-//
-//            },
-//            error: function(error) {
-//                console.error('Произошла ошибка:', error);
-//            }
-//        });
 
-//    });
+
+    $('.get-code-link').on('click', function(){
+
+        const key_input = document.getElementById('localization_key');
+        const key_value = "{{local_dict["+"'"+key_input.value+"'"+"][current_user.language]}}"
+
+        // Создаем временный элемент input
+        const input = document.createElement('input');
+        input.value = key_value;
+        
+        // Добавляем его на страницу (он не видим для пользователя)
+        document.body.appendChild(input);
+
+        // Выделяем текст в input
+        input.select();
+
+        // Копируем текст в буфер обмена
+        document.execCommand('copy');
+
+        // Удаляем временный элемент input
+        document.body.removeChild(input);
+
+
+
+        console.log('key_value', key_value)
+    });
+
 
 
 

@@ -1,11 +1,12 @@
 import random, config, re
 import string
+import json
 from datetime import datetime
 import requests
 from flask_login import current_user
 
 from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise,\
-    Plan, UserTraining, UserTrainingExercise, Plan_Trainings, User
+    Plan, UserTraining, UserTrainingExercise, Plan_Trainings, User, Localization
 from typing import List
 from sqlalchemy import or_, desc
 from main import db
@@ -414,3 +415,14 @@ def generate_random_password(length=6):
     password = ''.join(random.choice(characters) for _ in range(length))
 
     return password
+
+def load_localization_dict():
+
+    phrases = Localization.query.all()
+    phrases_list = {}
+    for phrase in phrases:
+        translations_dict = json.loads(phrase.translations)
+        phrases_list[phrase.key] = translations_dict
+
+
+    return phrases_list
