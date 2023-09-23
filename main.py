@@ -1236,7 +1236,7 @@ def localization():
             phrase.translations = json.dumps(phrase_dict)
             phrase.sector = sector
         else:
-            localized_phrase = Localization(key=phrase_key, sector=sector, translations=json.dumps(phrase_dict))
+            localized_phrase = Localization(key=phrase_key, translations=json.dumps(phrase_dict))
             db.session.add(localized_phrase)
             phrases_list.append([phrase_key, phrase_dict])
         try:
@@ -1249,7 +1249,7 @@ def localization():
 
 
     return render_template('localization.html', languages=languages, phrases_list=phrases_list, phrase_dict=phrase_dict,
-                               phrase_key=phrase_key, sectors=sectors, sector=sector)
+                               phrase_key=phrase_key, sectors=sectors)
 
 
 
