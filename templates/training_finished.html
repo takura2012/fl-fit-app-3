@@ -1,32 +1,32 @@
 {% extends 'base.html' %}
 {% block title %}
-Поздравляю!
+{{local_dict['Congratulations'][current_user.language]}}!
 {% endblock %}
 
 {% block body %}
 <div class="container text-center m-3">
-<h3>Тренировка завершена!</h3>
+<h3>{{local_dict['Workout complete'][current_user.language]}}!</h3>
 </div>
 <div class="mb-3">
     <a href="/statistics" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
-    Статистика
+    {{local_dict['Statistics'][current_user.language]}}
 </a>
 <a href="/" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
-    Главная
+    {{local_dict['Main'][current_user.language]}}
 </a>
 </div>
 
 
 <div class="row mb-0 fs-5">
         <div class="col mb-0 px-3 fw-semibold">
-           Упражнение
+           {{local_dict['Exercise'][current_user.language]}}
         </div>
 
         <div class="col mb-0 fw-semibold text-center">
-            Выполнение
+            {{local_dict['Performance'][current_user.language]}}
         </div>
         <div class="col mb-0 fw-semibold text-center">
-            Рабочий вес
+            {{local_dict['Working weight'][current_user.language]}}
         </div>
 </div>
  <hr>
@@ -36,11 +36,16 @@
             {{loop.index}}. {{ex.ex_name}}
         </div>
         <div class="col mb-0 fw-semibold text-center">
-            {% if not ex.ex_skipped %} <span class="text-success">Завершено</span> {% else %} <span class="text-danger">Пропущено</span> {% endif %}
+            {% if not ex.ex_skipped %} <span class="text-success">
+                                            {{local_dict['Completed'][current_user.language]}}
+                                        </span>
+            {% else %} <span class="text-danger">
+                            {{local_dict['Skipped'][current_user.language]}}
+                        </span> {% endif %}
         </div>
         <div class="col mb-0 fw-semibold text-center">
             {% if ex.weight>0 %}
-                {{ex.weight}} кг
+                {{ex.weight}} {{local_dict['kg'][current_user.language]}}
             {% endif %}
         </div>
     </div>
@@ -48,14 +53,14 @@
 <hr>
 <form action="/note_save" method="post">
     <div class="text-primary-emphasis mb-2" id="notes_div">
-        Заметка к тренировке:
+        {{local_dict['Workout note'][current_user.language]}}:
     </div>
     <div class="mb-2">
         <textarea name="train_note" id="train_note" class="form-control bg-white-op-50" rows="4">{{train_note}}</textarea>
     </div>
     <div class="">
         <input type="hidden" name="user_training_id" value="{{user_training_id}}">
-        <input type="submit" class="btn btn-outline-success" value="Сохранить заметку">
+        <input type="submit" class="btn btn-outline-success" value="{{local_dict['Save note'][current_user.language]}}">
     </div>
 </form>
 {% endblock %}

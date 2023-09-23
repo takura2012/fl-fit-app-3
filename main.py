@@ -51,7 +51,7 @@ def user_login():
 
         if user and check_password_hash(user.password, password):
             login_user(user)
-            get_language_dict()
+            # get_language_dict()
             return redirect(url_for('index'))
 
         flash('Ошибка входа', 'danger')
@@ -103,13 +103,24 @@ def register():
 @app.route('/', methods=['POST', 'GET'])
 def index():
 
+    browser_lang = request.headers.get('Accept-Language')
+    print(browser_lang)
+    return render_template('index.html', browser_lang=browser_lang)
+
+
     try:
         uncompleted_user_trainings = UserTraining.query.filter_by(user_id=current_user.id, assigned=True, completed=False).all()
     except:
-        return render_template("index.html", current_user=current_user)
+        return render_template("index.html", current_user=current_user, browser_lang=browser_lang)
 
-    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user)
+    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user, browser_lang=browser_lang)
 
+
+@app.route('/def_lang')
+def def_lang():
+    lang = request.args.get('lang', 'EN')
+
+    return redirect(url_for('index', lang=lang))
 # ------------------------------------------------BASE----------------------------------------------------------------
 
 @app.route('/list/<string:counters>/del', methods=['POST','GET'])
@@ -361,7 +372,7 @@ def new_train():
     if current_user.role != 'admin':
         conditions = or_(Training.owner == 'admin', Training.owner == current_user.name)
     else:
-        conditions = or_(Training.owner == 'admin', Training.owner == 'old')
+        conditions = or_(Training.owner == 'admin', Training.owner == 'old_training')
 
     trains_list = Training.query.filter(conditions).all()
     if request.method == 'POST':
@@ -386,7 +397,7 @@ def edit_train(train_id):
 
     train = Training.query.get(train_id)  # нахожу тренировку по ID которое передано в роуте
 
-    if train.owner == 'old':
+    if train.owner == 'old_training':
         user_trainings = UserTraining.query.filter_by(training_id=train.training_id).all()
 
         unsorted_train_data = []
@@ -485,7 +496,7 @@ def train_delete():
 
         user_training = UserTraining.query.filter_by(training_id=train_id).first()
         if user_training:
-            train.owner = 'old'
+            train.owner = 'old_training'
             try:
                 db.session.commit()
             except:
@@ -1202,15 +1213,12 @@ def localization():
     languages = config.LANGUAGES
     sectors = config.SECTORS
     phrase_dict = {}
-
+    sector = 'Application'
     phrases = Localization.query.all()
     phrases_list = []
     for phrase in phrases:
         translations_dict = json.loads(phrase.translations)
         phrases_list.append([phrase.key, translations_dict])
-
-
-
 
     if request.method == 'GET':
         phrase_key = request.args.get('key', '')
@@ -1219,8 +1227,6 @@ def localization():
         if phrase_obj:
             phrase_dict = json.loads(phrase_obj.translations)
             sector = phrase_obj.sector
-
-
 
     if request.method == 'POST':
         phrase_key = request.form.get('key', '')
@@ -1236,7 +1242,7 @@ def localization():
             phrase.translations = json.dumps(phrase_dict)
             phrase.sector = sector
         else:
-            localized_phrase = Localization(key=phrase_key, translations=json.dumps(phrase_dict))
+            localized_phrase = Localization(key=phrase_key, translations=json.dumps(phrase_dict), sector=sector)
             db.session.add(localized_phrase)
             phrases_list.append([phrase_key, phrase_dict])
         try:
@@ -1245,11 +1251,8 @@ def localization():
             db.session.rollback()
             return 'Ошибка при записи локализации'
 
-
-
-
     return render_template('localization.html', languages=languages, phrases_list=phrases_list, phrase_dict=phrase_dict,
-                               phrase_key=phrase_key, sectors=sectors)
+                               phrase_key=phrase_key, sectors=sectors, sector=sector)
 
 
 

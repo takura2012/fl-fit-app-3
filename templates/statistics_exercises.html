@@ -9,13 +9,15 @@
         <div class="mb-3">
             <form action="/statistics/exercises" method="post">
             <a href="/statistics" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
-                Тренировки ({{trains_count}})
+                {{local_dict['Workouts'][current_user.language]}} ({{trains_count}})
             </a>
             <a href="/" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
-                Главная
+                {{local_dict['Main'][current_user.language]}}
             </a>
                 <div class="mt-2">
-                    <input type="checkbox" class="form-check-input" name="noweight_checkbox" id="noweight_checkbox" value="asdsd"> <label for="noweight_checkbox">Отображать упражнения без веса</label>
+                    <input type="checkbox" class="form-check-input" name="noweight_checkbox" id="noweight_checkbox" value="asdsd"> <label for="noweight_checkbox">
+                    {{local_dict['Show_no_weights'][current_user.language]}}
+                </label>
                 </div>
                 <input type="hidden" name="user_id" id="user_id" value="{{user_id}}">
                 <input type="hidden" name="trains_count" id="trains_count" value="{{trains_count}}">
@@ -38,16 +40,23 @@
             <div id="panelsStayOpen-collapse{{exercise[0]}}" class="accordion-collapse collapse">
               <div class="accordion-body">
                   <div class="row fw-semibold">
-                      <div class="col">Дата</div>
-                      <div class="col">Вес</div>
-                      <div class="col">Выполнение</div>
+                      <div class="col">{{local_dict['Date'][current_user.language]}}</div>
+                      <div class="col">{{local_dict['Weight'][current_user.language]}}</div>
+                      <div class="col">{{local_dict['Completion'][current_user.language]}}</div>
                   </div>
                   <hr>
                   {% for data in exercise[4] %}
                   <div class="row">
                       <div class="col">{{data.date}}</div>
-                      <div class="col">{% if data.weight>0 %}{{data.weight}}кг{% else %}--{% endif %}</div>
-                      <div class="col">{% if data.skipped %}<span class="text-danger">Пропущено</span>{% else %}<span class="text-success">Завершено</span>{% endif %}</div>
+                      <div class="col">{% if data.weight>0 %}{{data.weight}}
+                          {{local_dict['kg'][current_user.language]}}
+                          {% else %}--{% endif %}</div>
+                      <div class="col">{% if data.skipped %}<span class="text-danger">
+                          {{local_dict['Skipped'][current_user.language]}}
+                      </span>{% else %}<span class="text-success">
+                          {{local_dict['Completed'][current_user.language]}}
+                      </span>{% endif %}
+                      </div>
                   </div>
                   {% endfor %}
               </div>

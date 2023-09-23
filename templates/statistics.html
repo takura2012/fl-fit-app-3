@@ -9,11 +9,11 @@
     <div>
     <form action="/statistics/exercises" method="post">
 
-        <input type="submit" class="statistics-btn d-inline-flex p-2 fw-bold text-primary fs-6 link-underline link-underline-opacity-0" value="Упражнения">
+        <input type="submit" class="statistics-btn d-inline-flex p-2 fw-bold text-primary fs-6 link-underline link-underline-opacity-0" value="{{local_dict['Exercises'][current_user.language]}}">
         <input type="hidden" name="user_id" value="{{user.id}}">
         <input type="hidden" name="trains_count" value="{{completed_trainings|length + uncompleted_trainings|length}}">
     <a href="/" class="statistics-btn d-inline-flex p-2 fw-bold fs-6 link-underline link-underline-opacity-0">
-        Главная
+        {{local_dict['Main'][current_user.language]}}
     </a>
     </form>
 
@@ -43,11 +43,15 @@
         </div>
         <div class="row mb-1 text-secondary">
             <div class="col">
-                Упражнений: {{ct[2]}} <a href="/statistics/details/{{ct[1]}}" >(просмотр)</a>
+                Упражнений: {{ct[2]}} <a href="/statistics/details/{{ct[1]}}" >
+                ({{local_dict['view'][current_user.language]}})
+            </a>
             </div>
 
             <div class="col">
-                <a href="/statistics/delete/{{ct[1]}}">Удалить</a>
+                <a href="/statistics/delete/{{ct[1]}}">
+                    {{local_dict['Delete'][current_user.language]}}
+                </a>
             </div>
         </div>
     </div>

@@ -4,16 +4,18 @@
 {% endblock %}
 
 {% block body %}
-<div class="account-block pt-3">
+<div class="localization-block">
 <div class="text-center">
     {% include "/modals/flash_mess.html" %}
 </div>
+    <a href="/localization">Очистить</a>
+    <a href="/">Главная</a>
 
     <form method="post">
         <span>Сектор</span>
         <select name="sector" id="" class="form-select mb-2">
-            {% for sector in sectors %}
-                <option value="{{sector}}">{{sector}}</option>
+            {% for section in sectors %}
+                <option value="{{section}}" {% if section == sector %} selected {% endif %}>{{section}}</option>
             {% endfor %}
         </select>
 
@@ -40,10 +42,16 @@
               <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
             </svg>
         </a>
-    </form>
-    {% for phrase in phrases_list %}
-    <a href="/localization_load_phrase/{{phrase[0]}}" class="" name="{{phrase[0]}}">{{phrase[0]}}<br></a>
 
-    {% endfor %}
+    </form>
+    <hr>
+
+        {% for phrase in phrases_list %}
+           <a href="/localization_load_phrase/{{phrase[0]}}" class="me-2 localiz-custom-badge" name="{{phrase[0]}}">{{phrase[0]}}</a>
+        {% endfor %}
+
+
+
+
 </div>
 {% endblock %}

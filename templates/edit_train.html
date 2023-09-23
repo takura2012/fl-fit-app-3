@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}
-Новая тренировка
+{{local_dict['Old'][current_user.language]}}
 {% endblock %}
 
 {% block body %}
@@ -15,10 +15,16 @@
 
 
             <div class="col-4">
-                <a href="/new_train" class="mx-3 link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Вернуться</a>
+                <a href="/new_train" class="mx-3 link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
+                    {{local_dict['Back'][current_user.language]}}
+                </a>
                 {% if train.owner == current_user.name or current_user.role == "admin" %}
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#rename_train" class="mx-3 link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Переименовать</a>
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#delete_train" class="mx-3 link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Удалить</a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#rename_train" class="mx-3 link-success link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
+                        {{local_dict['Rename'][current_user.language]}}
+                    </a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#delete_train" class="mx-3 link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
+                        {{local_dict['Delete'][current_user.language]}}
+                    </a>
                 {% endif %}
             </div>
 
@@ -34,10 +40,10 @@
 
     <div class="row mb-1 ">
                 <div class="col-6 fs-4">
-                    <b>Упражнение</b>
+                    <b>{{local_dict['Exercise'][current_user.language]}}</b>
                 </div>
                 <div class="col-3 fs-4">
-                    <b>Подходы</b>
+                    <b>{{local_dict['Sets'][current_user.language]}}</b>
                 </div>
                 <div class="col-3">
                 </div>
@@ -49,11 +55,13 @@
                     {{te_info[0].name}}
                 </div>
                 <div class="col-4 fs-4">
-                    {{te_info[1]}}x{{te_info[2]}} ({{te_info[0].time_per_set*te_info[1]}} мин.)
+                    {{te_info[1]}}x{{te_info[2]}} ({{te_info[0].time_per_set*te_info[1]}} {{local_dict['minutes'][current_user.language]}}.)
                 </div>
                 <div class="col-2">
                     {% if train.owner == current_user.name or current_user.role == "admin" %}
-                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">Редактировать</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#confirmDelete{{ te_info[0].exercise_id }}">
+                        {{local_dict['Edit'][current_user.language]}}
+                    </button>
                     <form action="/edit_exercise_in_train/{{train.training_id}}" method="post">
                         {% include "/modals/modal_del_exercise_from_train.html" %}
                     </form>
@@ -63,14 +71,14 @@
                 <div class="col-6 fs-4">
                 </div>
                 <div class="col-4 fs-4">
-                   Всего времени:  {{total_time}} мин.
+                   {{local_dict['total_time'][current_user.language]}}:  {{total_time}} {{local_dict['minutes'][current_user.language]}}.
                 </div>
                 <div class="col-2">
                 </div>
 
     </div>
 
-{% else %} <h4>В этой тренировке пока нет упражнений</h4>
+{% else %} <h4>{{local_dict['No_exercises_in_train'][current_user.language]}}</h4>
 {% endif %}
 </section>
 <hr>
@@ -80,7 +88,7 @@
 
         <div class="row mb-0">
             <div class="col-2">
-                <b>Фильтры упражнений:</b>
+                <b>{{local_dict['Exercises_filters'][current_user.language]}}:</b>
             </div>
             <div class="col-2">
 
@@ -93,7 +101,7 @@
                 </div>
             </div>
             <div class="col-2">
-                <input type="submit" class="btn btn-primary" value="Применить фильтры">
+                <input type="submit" class="btn btn-primary" value="{{local_dict['Apply filters'][current_user.language]}}">
                 <input type="hidden" name="train_id" value="{{train_id}}">
 
             </div>
@@ -133,16 +141,16 @@
 
                 <div class="row mb-2">
                 <div class="col-3">
-                    Подходы <br>
+                    {{local_dict['Sets'][current_user.language]}} <br>
                     <input type="number" name="sets" id="sets" class="form-control mb-2" required>
                 </div>
                 <div class="col-3">
-                    Повторения <br>
+                    {{local_dict['Repetitions'][current_user.language]}} <br>
                     <input type="number" name="reps" id="reps" class="form-control mb-2" required><br>
                 </div>
                 <div class="col-3">
                     <br>
-                    <input type="submit" id="" class="btn btn-success" value="Добавить упражнение">
+                    <input type="submit" id="" class="btn btn-success" value="{{local_dict['Add_exercise'][current_user.language]}}">
                     <input type="hidden" name="exercise_filter_list_input" id="exercise_filter_list_input" value={{exercise_filter_list_json}}>
                     <input type="hidden" name="target_filter" value="{{target_filter}}">
                 </div>
@@ -161,7 +169,7 @@
 
 {% if current_user.role != "admin" %}
     {% if train.owner != current_user.name %}
-        <span class="text-primary">Вы можете редактрировать только личные тренировки и планы</span>
+        <span class="text-primary">{{local_dict['Unable_edit'][current_user.language]}}</span>
     {% endif %}
 {% endif %}
 

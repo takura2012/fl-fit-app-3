@@ -194,6 +194,18 @@ body {
     transform: translateX(-50%);
 }
 
+.localization-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width:100%;
+    max-width: 900px;
+
+    left: 50%; /* Расположение блока по горизонтали в центре */
+    transform: translateX(-50%);
+}
+
+
 .account-item {
     width: 100%;
     background-color: rgba(255,255,255, 0.5);
@@ -232,4 +244,17 @@ body {
 #languageSelect {
     width: 300px; /* Увеличьте ширину, если необходимо */
     height: 70px; /* Увеличьте высоту, если необходимо */
+}
+
+.localiz-custom-badge {
+    display: inline-block;
+    background: #708090;
+    color: white;
+    text-decoration: none;
+    border-color: white;
+    border-radius: 6px;
+    margin: 1px;
+    padding: 1px;
+    padding-left: 4px;
+    padding-right: 4px;
 }
