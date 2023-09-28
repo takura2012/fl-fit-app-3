@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}
-Главная
+{{local_dict['Main'][current_user.language]}}
 {% endblock %}
 
 {% block body %}
-{{ browser_lang }}
+
 <div class="account-block pt-3">
 <div class="text-center">
     {% include "/modals/flash_mess.html" %}

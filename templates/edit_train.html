@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}
-{{local_dict['Old'][current_user.language]}}
+{{local_dict['Edit'][current_user.language]}}
 {% endblock %}
 
 {% block body %}
@@ -27,11 +27,31 @@
                     </a>
                 {% endif %}
             </div>
-
-
-
         </div>
 
+        {% if current_user.role == 'admin' %}
+        <form action="/save_train_localization" method="post">
+            <div class="">
+                <a class="btn btn-primary" data-bs-toggle="collapse" href="#localization_collapse" role="button" aria-expanded="false" aria-controls="localization_collapse">
+                    Открыть локализацию
+                  </a>
+
+
+                <div class="collapse" id="localization_collapse">
+                  <div class="">
+                    {% for language in languages %}
+                      <div class="d-flex">
+                          <span class="me-3"><img src="/static/flags/{{language}}.png" alt=""></span>
+                          <input type="text" class="form-control" name="train_{{language}}" placeholder="{{language}}" value="{{train_local_names[language]}}">
+                          <input type="hidden" name="train_id" value="{{train_id}}">
+                        </div>
+                    {% endfor %}
+                  </div>
+                    <button type="submit" class="btn btn-success">Сохранить данные локализации</button>
+                </div>
+            </div>
+        </form>
+        {% endif %}
 <hr>
 
 <!-- Раздел Упражнения -->
@@ -52,7 +72,7 @@
     <div class="row mb-1">
         {% for te_info in te_info_list %}
                 <div class="col-6 fs-4">
-                    {{te_info[0].name}}
+                    {{te_info[3][current_user.language]}}
                 </div>
                 <div class="col-4 fs-4">
                     {{te_info[1]}}x{{te_info[2]}} ({{te_info[0].time_per_set*te_info[1]}} {{local_dict['minutes'][current_user.language]}}.)
@@ -95,7 +115,7 @@
                 <div class="container-fluid">
                 <select name="select_target" id="select_target" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
                     {% for num in range(config_filter_targets|length) %}
-                        <option value="{{num-1}}" {% if target_filter|int+1 == num %} selected {% endif %}>{{config_filter_targets[num]}}
+                        <option value="{{num-1}}" {% if target_filter|int+1 == num %} selected {% endif %}>{{loc_config_targets[current_user.language][num]}}
                     {% endfor %}
                 </select>
                 </div>
@@ -135,7 +155,7 @@
             <input type="hidden" name="train_id_hidden" value="{{train.training_id}}">
             <select name="select_exercise" id="select_exercise" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">>
                     {% for ex in exercises %}
-                        <option value="{{ex.exercise_id}}">{{ex.name}}
+                        <option value="{{ex.exercise_id}}">{{exercise_localization_names[loop.index-1][current_user.language]}}
                     {% endfor %}
             </select>
 

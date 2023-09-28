@@ -14,8 +14,10 @@ class Exercise(db.Model):
 
     exercise_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), default='New exercise')
+    localized_name = db.Column(db.Text)
     target = db.Column(db.String(20), default='')
     description = db.Column(db.String(300), default='')
+    localized_description = db.Column(db.Text)
     difficulty = db.Column(db.Integer, default=1)
     time_per_set = db.Column(db.Integer, default=1)
     counter = db.Column(db.Integer, default=0)
@@ -78,6 +80,7 @@ class Training(db.Model):
 
     training_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
+    local_names = db.Column(db.Text)
     owner = db.Column(db.String(80), default='admin')
 
     exercises = relationship('Exercise', secondary='training_exercises', overlaps="trainings")
@@ -104,6 +107,7 @@ class Plan(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, default='New Plan')
+    local_names = db.Column(db.Text)
     owner = db.Column(db.String, default='Admin')
 
     trainings = relationship('Training', secondary='plan_trainings', back_populates='plans')

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}
-Регистрация
+{{local_dict['Registration'][default_language]}}
 {% endblock %}
 
 {% block body %}
@@ -9,16 +9,16 @@
     <div class="center-block">
         <div class="content">
             <div class="text-center mb-3 border border-secondary p-2 rounded-3">
-                <input class="form-control mb-2" name="username" type="text" placeholder="Пользователь" required>
-                <input class="form-control mb-2" name="password" type="password" placeholder="Пароль" required>
-                <input class="form-control mb-2" name="email" type="text" placeholder="Электронный адрес" required>
+                <input class="form-control mb-2" name="username" type="text" placeholder="{{local_dict['User'][default_language]}}" required>
+                <input class="form-control mb-2" name="password" type="password" placeholder="{{local_dict['Password'][default_language]}}" required>
+                <input class="form-control mb-2" name="email" type="text" placeholder="{{local_dict['E-mail'][default_language]}}" required>
             </div>
             <div class="row ">
                 <div class="col">
-                    <input type="submit" class="btn btn-success" value="Подтвердить">
+                    <input type="submit" class="btn btn-success" value="{{local_dict['Confirm'][default_language]}}">
                 </div>
                 <div class="col text-end">
-                    <a href="/index" class="">Вернуться</a>
+                    <a href="/index" class="">{{local_dict['Back'][default_language]}}</a>
                 </div>
 
                 {% include '/modals/flash_mess.html' %}

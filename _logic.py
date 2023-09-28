@@ -86,19 +86,19 @@ def select_exercises(target_list=['Ноги'], efforts=90, excluded=[], filters=
     return selected_exercises
 
 
-def convert_dict_to_list(target_days, groups=config.GROUPS):
-    list_with_empty = [[], [], [], [], [], [], []]
-    # перебираем словарь targets_dict = 'fullbody':'1,2,3', ...
-    for key, positions in target_days.items():
-        poslist = [pos for pos in positions.split(',')]  # из строки делаем список разделяя по запятой '1,2,3'
-        for pos in poslist:
-            del list_with_empty[int(pos) - 1]
-            list_with_empty.insert(int(pos) - 1,
-                                   groups[key])  # вставляем элемент groups[key] в список list_with_empty на pos
-    # удаляю пустые подсписки
-    group_json = [sub for sub in list_with_empty if sub]
-
-    return group_json
+# def convert_dict_to_list(target_days, groups=config.GROUPS):
+#     list_with_empty = [[], [], [], [], [], [], []]
+#     # перебираем словарь targets_dict = 'fullbody':'1,2,3', ...
+#     for key, positions in target_days.items():
+#         poslist = [pos for pos in positions.split(',')]  # из строки делаем список разделяя по запятой '1,2,3'
+#         for pos in poslist:
+#             del list_with_empty[int(pos) - 1]
+#             list_with_empty.insert(int(pos) - 1,
+#                                    groups[key])  # вставляем элемент groups[key] в список list_with_empty на pos
+#     # удаляю пустые подсписки
+#     group_json = [sub for sub in list_with_empty if sub]
+#
+#     return group_json
 
 
 def get_training_connections(train_id):   # te_info = [te, sets, repetitions] (te- Exercise)
@@ -106,9 +106,6 @@ def get_training_connections(train_id):   # te_info = [te, sets, repetitions] (t
     train = Training.query.get(train_id)
     te_info_list = []
 
-    # exercise_list = train.exercises  # Упражнения будут в порядке, в котором они находятся в базе
-
-    # print(f'_logic: train.exercises= {exercise_list}')
 
     for te in train.exercises:  # для каждого упражнения te из цикла по training.exercises (класса Training)
         training_exercise = TrainingExercise.query.filter_by(training_id=train.training_id,
@@ -117,8 +114,8 @@ def get_training_connections(train_id):   # te_info = [te, sets, repetitions] (t
         if training_exercise:  # и выбираем связанные сеты повторы и веса (которые 0 по умолчанию)
             sets = training_exercise.sets
             repetitions = training_exercise.repetitions
-
-            te_info = [te, sets, repetitions]
+            ex_localizations = json.loads(te.localized_name)
+            te_info = [te, sets, repetitions, ex_localizations]
             te_info_list.append(te_info)
 
     return te_info_list
@@ -321,7 +318,8 @@ def get_exercise_statistics(user_id):
     for ex_id, unsorted_data in exercises_struct.items():
         data = sorted(unsorted_data, key=lambda x: datetime.strptime(x['date'], '%d-%m-%Y %H:%M:%S'), reverse=True)
         ex = Exercise.query.get(ex_id)
-        ex_name = ex.name
+        ex_names = json.loads(ex.localized_name)
+        ex_name = ex_names[current_user.language]
         count = len(data)
         skipped_count = len(list(filter(lambda item: item['skipped'], data)))
         struc.append([ex_id, ex_name, count, skipped_count, data, ex.target])
@@ -403,7 +401,6 @@ def send_email(target_email, new_password, user_name):
         # Отправка письма
         server.sendmail(sender_email, recipient_email, message.as_string())
 
-    print('Письмо успешно отправлено.')
     return None
 
 

@@ -29,6 +29,27 @@
             <h4>id{{exercise.exercise_id}} N{{exercise.counter}}: {{exercise.name}}</h4>
             <br><span>Название:</span>
             <input type="text" name="name" id="name" class="form-control" value="{{exercise.name}}"><br>
+
+
+
+              <a class="btn btn-primary" data-bs-toggle="collapse" href="#localization_collapse" role="button" aria-expanded="false" aria-controls="localization_collapse">
+                Открыть локализацию
+              </a>
+
+
+            <div class="collapse show" id="localization_collapse">
+              <div class="card card-body">
+                {% for language in languages %}
+                  <div class="d-flex">
+                      <span class="me-3"><img src="/static/flags/{{language}}.png" alt=""></span>
+                      <input type="text" class="form-control" name="exercise_{{language}}" placeholder="{{language}}" value="{{exercise_localized_names[language]}}">
+                    </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <br>
+
             <span>Целевая группа:</span>
             <select name="select_target" class="form-select form-select-md mb-3" aria-label=".form-select-md example">
                 {% for target in targets %}

@@ -44,52 +44,45 @@ BMI = {
 
 TARGETS = ['Разминка', 'Пресс', 'Ноги', 'Спина', 'Грудь', 'Ягодицы', 'Бицепс', 'Трицепс', 'Плечи', 'Кардио']
 
+LOC_TARGETS = {
+    'EN': ['All', 'Stretching', 'Abs', 'Legs', 'Back', 'Chest', 'Hips', 'Biceps', 'Triceps', 'Shoulders', 'Cardio'],
+    'RU': ['Все', 'Разминка', 'Пресс', 'Ноги', 'Спина', 'Грудь', 'Ягодицы', 'Бицепс', 'Трицепс', 'Плечи', 'Кардио'],
+    'UA': ['Всі', 'Розминка', 'Прес', 'Ноги', 'Спина', 'Груди', 'Сідниці', 'Біцепс', 'Трицепс', 'Плечі', 'Кардіо'],
+    'PL': ['Wszystko', 'Rozgrzewka', 'Brzuch', 'Nogi', 'Plecy', 'Klatka piersiowa', 'Pośladki', 'Biceps', 'Triceps', 'Ramiona', 'Kardio']
+}
+
+
 NO_WEIGHT_TARGETS = ['Разминка', 'Пресс', 'Кардио']
 
 FILTERS_LOCATION = {
-    '1': 'В зале',
-    '2': 'Дома',
-    '3': 'Спортплощадка'
+    '1': 'In_the_gym',
+    '2': 'At_home',
+    '3': 'Sports_field'
             }
 
 FILTERS_SEX = {
-    '4': 'Для мужчин',
-    '5': 'Для женщин'
+    '4': 'For_men',
+    '5': 'For_women'
 }
 
 FILTERS_INVENTORY = {
-    '6': 'Без инвентаря',
-    '7': 'С инвентарем'
+    '6': 'Without_equipment',
+    '7': 'With_equipment'
 }
 
 FILTERS_TYPE = {
-    '8': 'Силовые',
-    '9': 'Разминка',
-    '10': 'Кардио'
+    '8': 'Strength_training',
+    '9': 'Warm-up',
+    '10': 'Cardio'
 }
 
 FILTERS_LEVEL = {
-    '11': 'Для начинающих'
+    '11': 'For_beginners'
 }
 
 FILTER_TARGETS = ['Все']+TARGETS
 
 FILTER_LIST = [FILTERS_LOCATION, FILTERS_SEX, FILTERS_INVENTORY, FILTERS_TYPE, FILTERS_LEVEL]
-
-GROUPS = {
-        'fullbody': ['Разминка', 'Ноги', 'Спина', 'Грудь'],
-        'cardio': ['Кардио'],
-        'warming':['Разминка'],
-        'split1': ['Разминка', 'Ноги', 'Плечи'],
-        'split2': ['Разминка', 'Грудь', 'Трицепс'],
-        'split3': ['Разминка', 'Спина', 'Бицепс'],
-        'split4': ['Разминка', 'Плечи'],
-        'split7': ['Разминка', 'Бицепс', 'Трицепс','Плечи'],
-        'split2_1': ['Разминка', 'Ноги', 'Плечи', 'Бицепс'],
-        'split2_2': ['Разминка', 'Спина', 'Грудь', 'Трицепс'],
-        'Legs':['Ноги'],
-        'legs_glutes': ['Ноги', 'Ягодицы']
-          }
 
 LANGUAGES = ['EN', 'RU', 'UA', 'PL']
 SECTORS = ['Application', 'Exercises', 'Trainings', 'Plans', 'Modals']

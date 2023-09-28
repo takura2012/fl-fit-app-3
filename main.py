@@ -14,10 +14,14 @@ from flask_session import Session
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user, AnonymousUserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
+import logging
 
 
 
 app = Flask(__name__)
+
+logging.basicConfig(level=logging.INFO)  # Устанавливаем уровень логгирования (INFO, DEBUG и т. д.)
+logger = logging.getLogger(__name__)
 app.config.from_object('config')
 
 db.init_app(app)
@@ -69,6 +73,7 @@ def user_logout():
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
+    default_language = session.get('default_language', 'EN')
 
     if request.method == 'POST':
         username = request.form['username']
@@ -96,31 +101,35 @@ def register():
         return redirect(url_for('index'))
 
 
-    return render_template('/modals/register.html')
+    return render_template('/modals/register.html', default_language=default_language)
 
 
 @app.route('/index', methods=['POST', 'GET'])
 @app.route('/', methods=['POST', 'GET'])
 def index():
+    languages = config.LANGUAGES
+    default_language = 'EN'
 
     browser_lang = request.headers.get('Accept-Language')
-    print(browser_lang)
-    return render_template('index.html', browser_lang=browser_lang)
 
-
+    langs = browser_lang.split(';')
+    for lang in langs:
+        for defined_lang in languages:
+            if defined_lang.lower() in lang:
+                default_language = defined_lang
+                break
+        else:
+            continue
+        break
+    session['default_language'] = default_language
     try:
         uncompleted_user_trainings = UserTraining.query.filter_by(user_id=current_user.id, assigned=True, completed=False).all()
     except:
-        return render_template("index.html", current_user=current_user, browser_lang=browser_lang)
+        return render_template("index.html", current_user=current_user, default_language=default_language)
 
-    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user, browser_lang=browser_lang)
+    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user, default_language=default_language)
 
 
-@app.route('/def_lang')
-def def_lang():
-    lang = request.args.get('lang', 'EN')
-
-    return redirect(url_for('index', lang=lang))
 # ------------------------------------------------BASE----------------------------------------------------------------
 
 @app.route('/list/<string:counters>/del', methods=['POST','GET'])
@@ -130,7 +139,6 @@ def list_del(counters):
     exercises = Exercise.query.all()
     muscles = Muscle.query.all()
     if tb == 'ex':
-        # exercise = Exercise.query.get_or_404(id)
         exercise = Exercise.query.filter_by(counter=counter).first()
         try:
             db.session.delete(exercise)
@@ -155,6 +163,7 @@ def list_del(counters):
 @app.route('/list/<string:counters>/edit', methods=['POST', 'GET'])
 def list_edit(counters):
     targets = config.TARGETS
+    languages = config.LANGUAGES
     const_config = {}
     const_config['filter_list'] = config.FILTER_LIST
     index_dict = {}
@@ -167,6 +176,13 @@ def list_edit(counters):
     muscles = Muscle.query.all()
     if tb == 'ex':  # если передано ex, то работа над редактированием Упражнения
         exercise = Exercise.query.filter_by(counter=counter).first()    # counter - переданное значение счетчика, фильтрую базу по счетчику
+
+        if exercise.localized_name:
+            exercise_localized_names = json.loads(exercise.localized_name)
+            print(exercise_localized_names)
+        else:
+            exercise_localized_names={}
+
         if exercise.filters is None:
             exercise.filters=[]
         if request.method == 'POST':    # если метод ПОСТ (то есть если мы передаем данные с формы к нам сюда на сервер, то далее обрабатываем данные формы и сохраняем в базу
@@ -175,6 +191,12 @@ def list_edit(counters):
             exercise.description = request.form['description']
             exercise.difficulty = request.form['difficulty']
             exercise.time_per_set = request.form['time_per_set']
+
+            exercise_localized_names = {}
+            for language in languages:
+                exercise_localized_names[language] = request.form.get('exercise_'+language, '')
+
+            exercise.localized_name = json.dumps(exercise_localized_names)
 
             for i in range(len(const_config['filter_list'])):
                 form_list = request.form.getlist('filters' + str(i + 1))
@@ -223,7 +245,8 @@ def list_edit(counters):
 
             # передаем в шаблон упражнение, все мышцы, словарь {счетчик_мышцы:процент}
             return render_template('edit_ex_table.html', exercise=exercise, ex_len=ex_len, muscles=muscles,
-                                   mus_dict=mus_dict, targets=targets, const_config=const_config)
+                                   mus_dict=mus_dict, targets=targets, const_config=const_config, languages=languages,
+                                   exercise_localized_names=exercise_localized_names)
     else:   # если передано не ех (а значит mu) то мы работаем над мускулами
         muscle = Muscle.query.filter_by(counter=counter).first()    # получем по счетчику, и далее по методам ПОСТ или ГЕТ
         if request.method == 'POST':    # ПОСТ- сохраняем данные полученные из формы и генерируем маршрут на список всего
@@ -369,6 +392,9 @@ def edit_exercise_in_train(train_id):
 @app.route("/new_train", methods=['POST', 'GET'])
 def new_train():
 
+    languages = config.LANGUAGES
+    empty_locals = {lang: '' for lang in languages}
+
     if current_user.role != 'admin':
         conditions = or_(Training.owner == 'admin', Training.owner == current_user.name)
     else:
@@ -389,13 +415,24 @@ def new_train():
 
         return redirect(url_for('edit_train', train_id=new_train.training_id))
 
-    return render_template('new_train.html', trains_list=trains_list)
+
+    payload_data = [[train, json.loads(train.local_names) if train.local_names is not None else empty_locals] for train in trains_list]
+
+
+    return render_template('new_train.html', trains_list=trains_list, payload_data=payload_data)
 
 
 @app.route('/edit_train/<int:train_id>', methods=['POST', 'GET'])
 def edit_train(train_id):
-
+    languages = config.LANGUAGES
+    train_local_names = {}
     train = Training.query.get(train_id)  # нахожу тренировку по ID которое передано в роуте
+    try:
+     train_local_names = json.loads(train.local_names)
+    except:
+        for language in languages:
+            train_local_names[language] = ''
+
 
     if train.owner == 'old_training':
         user_trainings = UserTraining.query.filter_by(training_id=train.training_id).all()
@@ -411,8 +448,20 @@ def edit_train(train_id):
 
         return render_template('old_train.html', train_data=train_data)
 
-    config_filters = config.FILTER_LIST # основные фильтры из конфига (список списков)
+    const_config_filters = config.FILTER_LIST # основные фильтры из конфига (список списков)
+    config_filters = []
+    for i in range(len(const_config_filters)):
+        config_filters.append({})
+        for numb, filter_name in const_config_filters[i].items():
+            # print(filter_name)
+            localized_filter_name = Localization.query.filter_by(key=filter_name).first()
+            localized_filter_names_json = json.loads(localized_filter_name.translations)
+            localized_filter_name_json = localized_filter_names_json[current_user.language]
+            config_filters[i][numb] = localized_filter_name_json
+
+
     config_filter_targets = config.FILTER_TARGETS   # список фильтров таргета - групп мышц
+    loc_config_targets = config.LOC_TARGETS
     exercise_filter_list_str = request.args.get('exercise_filter_list_str')
     if exercise_filter_list_str:
         exercise_filter_list = json.loads(exercise_filter_list_str)
@@ -435,11 +484,17 @@ def edit_train(train_id):
     filtered_exercises = Exercise.query.filter(combined_condition).all()
 
     # применяем фильтр по группе мышц
+
+
+
     if int(target_filter) >= 0:
         target_filter_name = config_filter_targets[int(target_filter)+1]
         exercises = [ex for ex in filtered_exercises if ex.target == target_filter_name]    # отбираю по полю таргет
     else:
         exercises = filtered_exercises  # если фильтр -1 (все) то не фильтрую
+
+    exercise_localization_names = [json.loads(ex.localized_name) for ex in exercises]
+    # print(exercise_localization_names)
 
     if train:
         te_info_list = get_training_connections(train.training_id) # функция для получения связанных с тренировкой полей
@@ -449,10 +504,31 @@ def edit_train(train_id):
         total_time += te_info[0].time_per_set * te_info[1]
 
 
+
     return render_template('edit_train.html', train=train, te_info_list=te_info_list,
                            exercises=exercises, config_filters=config_filters, exercise_filter_list=exercise_filter_list,
                            config_filter_targets=config_filter_targets, target_filter=target_filter, total_time=total_time,
-                           train_id=train_id, exercise_filter_list_json=exercise_filter_list_json)
+                           train_id=train_id, exercise_filter_list_json=exercise_filter_list_json,
+                           exercise_localization_names=exercise_localization_names, loc_config_targets=loc_config_targets,
+                           languages=languages, train_local_names=train_local_names)
+
+
+@app.route('/save_train_localization', methods=['POST'])
+def save_train_localization():
+    languages = config.LANGUAGES
+    train_local_names = {}
+    for language in languages:
+        train_local_names[language] = request.form.get('train_'+language)
+    train_id = request.form.get('train_id')
+    train = Training.query.get(train_id)
+    train.local_names = json.dumps(train_local_names)
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        flash('Не удалось сохранить данные в базу')
+
+    return redirect(url_for('edit_train', train_id = train_id))
 
 
 @app.route('/train_rename', methods=['POST', 'GET'])
@@ -581,6 +657,7 @@ def exercise_filter_list():
 # ------------------------------------------------PLANS----------------------------------------------------------------
 @app.route('/plans_all', methods=['POST', 'GET'])
 def plans_all():
+    languages = config.LANGUAGES
 
     conditions = or_(Plan.owner == current_user.name, Plan.owner == 'admin')
     plans = Plan.query.filter(conditions).all()
@@ -592,8 +669,9 @@ def plans_all():
 
 
     trainings_in_plan = {}  # {plan: [trains], ...}
-
+    plans_local_names = {} # {plan: local_name}
     for plan in plans:
+        plans_local_names[plan] = json.loads(plan.local_names) if plan.local_names is not None else {lang: '' for lang in languages}
         trainings_in_plan[plan] = []
         for plan_train in plan_trainings:
 
@@ -601,31 +679,58 @@ def plans_all():
                 if train.training_id == plan_train.training_id and plan_train.plan_id == plan.id:
 
                     train_time = 0
+                    ex_loc_names_user_lang = []
                     for exercise in train.exercises:
                         te = TrainingExercise.query.filter_by(training_id=train.training_id, exercise_id=exercise.exercise_id).first()
                         train_time += te.sets * exercise.time_per_set
+                        ex_loc_names = json.loads(exercise.localized_name)
+                        ex_loc_name = ex_loc_names[current_user.language]
+                        ex_loc_names_user_lang.append(ex_loc_name)
 
-                    trainings_in_plan[plan].append([train, train_time])
+                    train_local_names = json.loads(train.local_names) if train.local_names is not None else {current_user.language: train.name}
+                    train_local_name = train_local_names[current_user.language]
 
-    return render_template('plans_all.html', trainings_in_plan=trainings_in_plan)
+                    trainings_in_plan[plan].append([train_local_name, train_time, ex_loc_names_user_lang])
+
+    # { < Plan 3 >: [[Training 3, 61], [Training 7, 67], [Training 10, 73], [Training 11, 79], [Training 12, 61]],
+    # {Plan: [[Training_name, train_time, [exercise_loc_names]] , [Training_name, train_time, [exercise_loc_names]], ..]}
+    return render_template('plans_all.html', trainings_in_plan=trainings_in_plan, plans_local_names=plans_local_names)
 
 
 @app.route('/plan_new/<int:plan_id>', methods=['POST', 'GET'])
 def plan_new(plan_id):
 
+    languages = config.LANGUAGES
+    empty_locals = {lang: '' for lang in languages}
+    train_local_names= {}
+    plan_trainings = []
+    all_plan_trainings = []
+    plan_local_names = empty_locals
+
     conditions = or_(Training.owner == 'admin', Training.owner == current_user.name)
     trainings = Training.query.filter(conditions).all()
+    for train in trainings:
+        if train.owner == 'admin':
+            train_local_names_loads = json.loads(train.local_names)
+            train_local_name = train_local_names_loads[current_user.language]
+        else:
+            train_local_name = train.name
+
+        train_local_names[train] = train_local_name
+
 
     plan = Plan.query.get(plan_id)
-    plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan_id).all()
+    if plan:
+        plan_local_names = json.loads(plan.local_names) if plan.local_names is not None else empty_locals
+        plan_trainings = Plan_Trainings.query.filter_by(plan_id=plan_id).all()
 
-    all_plan_trainings = []
-    train_ids = [plan_training.training_id for plan_training in plan_trainings]
 
-    for plan_training in plan_trainings:
-        if plan_training.training_id in train_ids:
-            train = Training.query.get(plan_training.training_id)
-            all_plan_trainings.append([train, plan_training.id])
+        train_ids = [plan_training.training_id for plan_training in plan_trainings]
+
+        for plan_training in plan_trainings:
+            if plan_training.training_id in train_ids:
+                train = Training.query.get(plan_training.training_id)
+                all_plan_trainings.append([train, plan_training.id])
 
 
 
@@ -641,7 +746,8 @@ def plan_new(plan_id):
             db.session.commit()
         except:
             db.session.rollback()
-            return 'Ошибка при создании нового плана тренировок'
+            flash('Ошибка при сохранении в базу')
+            return redirect(url_for('plans_all'))
     else:
         plan = Plan.query.get(plan_id)
         if not plan:
@@ -652,7 +758,28 @@ def plan_new(plan_id):
 
 
 
-    return render_template('plan_new.html', trainings=trainings, plan=plan, plan_trainings=plan_trainings, plan_id=plan.id, all_plan_trainings=all_plan_trainings)
+    return render_template('plan_new.html', trainings=trainings, plan=plan, plan_trainings=plan_trainings, plan_id=plan.id,
+                           all_plan_trainings=all_plan_trainings, languages=languages, plan_local_names=plan_local_names,
+                           train_local_names=train_local_names)
+
+
+@app.route('/save_plan_localization', methods = ['POST'])
+def save_plan_localization():
+    languages = config.LANGUAGES
+    plan_id = request.form.get('plan_id')
+    plan_local_names = {language: request.form.get('plan_'+language) for language in languages}
+
+    plan = Plan.query.get(plan_id)
+    plan.local_names = json.dumps(plan_local_names)
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        flash('Ошибка сохранения в базу данных')
+        return redirect(url_for('plans_all'))
+
+
+    return redirect(url_for('plan_new', plan_id=plan_id))
 
 
 @app.route('/plan_rename', methods=['POST', 'GET'])
@@ -746,73 +873,6 @@ def del_train_from_plan(plan_trainings_id):
     return redirect(url_for('plan_new', plan_id=plan_id))
 
 
-# ------------------------------------------------LOGIC----------------------------------------------------------------
-@app.route('/logic', methods=['POST', 'GET'])
-def logic():
-#     excluded = session.get('excluded', [])
-#     selected_result = session.get('selected_result', [])
-#     max_effort = session.get('max_effort', [70])
-#     targets_list = session.get('targets_list', [])
-#     excluded_exercises = []
-#     all_muscles = {}
-#
-#
-#     exercises = Exercise.query.all()
-#
-#     selected_result = select_exercises(targets_list, max_effort, excluded)
-#     excluded_exercises = Exercise.query.filter(Exercise.exercise_id.in_(excluded)).all()
-#
-#     if request.method == 'POST':
-#         try:
-#             max_effort = int(request.form['max_effort'])    # можно попробовать скалировать max_effort от повторений
-#         except ValueError:
-#             max_effort = 70
-#         targets_list = request.form.getlist('target')
-#
-#         selected_result = select_exercises(targets_list, max_effort, excluded)
-#         excluded_exercises = Exercise.query.filter(Exercise.exercise_id.in_(excluded)).all()
-#
-#         session['selected_result'] = selected_result
-#         session['max_effort'] = max_effort
-#         session['targets_list'] = targets_list
-#
-#     all_muscles = count_muscles(selected_result)
-#
-#
-#     return render_template('logic.html', exercises=exercises, selected_result=selected_result, max_effort=max_effort,
-#                            targets_list=targets_list, excluded_exercises=excluded_exercises, all_muscles=all_muscles)
-
-    return '<h1>Отключено</h1>'
-#
-#
-# @app.route('/logic/exclude/<int:ex_id>', methods=['POST', 'GET'])   # добавить в исключения
-# def logic_exclude(ex_id):
-#
-#     excluded = session.get('excluded', [])
-#     if ex_id in excluded:
-#         return redirect(url_for('logic'))
-#
-#     excluded.append(ex_id)
-#     # exercises = Exercise.query.all()
-#
-#     session['excluded'] = excluded
-#
-#     selected_result = session.get('selected_result', [])
-#     max_effort = session.get('max_effort', [])
-#     targets_list = session.get('targets_list', [])
-#     # print(excluded)
-#     return redirect(url_for('logic'))
-#
-#
-# @app.route('/logic/retrieve/<int:ex_id>')   # удалить из исключений
-# def logic_retrieve(ex_id):
-#     excluded = session.get('excluded', [])
-#     if ex_id in excluded:
-#         excluded.remove(ex_id)
-#     session['excluded'] = excluded
-#     return redirect(url_for('logic'))
-
-
 @app.route('/migration')
 def migration():
     return render_template('migration.html')
@@ -846,7 +906,7 @@ def current_train():
     current_train = get_user_assigned_train(current_user)
 
     if not current_train:
-        return render_template('current_train.html', current_user=current_user)
+        return render_template('current_train.html')
 
     current_train_exlist = []
     for exercise in current_train.exercises:
@@ -858,9 +918,11 @@ def current_train():
         user_training_exercise = UserTrainingExercise.query.filter_by(user_training_id=user_train.id,
                                                                       exercise_id=exercise.exercise_id
                                                                       ).first()
-        current_train_exlist.append([exercise.name, user_training_exercise.sets, user_training_exercise.repetitions, user_training_exercise.weight, user_training_exercise.completed])
+        ex_loc_names = json.loads(exercise.localized_name)
+        ex_loc_name = ex_loc_names[current_user.language]
+        current_train_exlist.append([ex_loc_name, user_training_exercise.sets, user_training_exercise.repetitions, user_training_exercise.weight, user_training_exercise.completed])
 
-    return render_template('current_train.html', current_user=current_user, current_train=current_train, current_train_exlist=current_train_exlist)
+    return render_template('current_train.html', current_train=current_train, current_train_exlist=current_train_exlist)
 
 
 @app.route('/assign_training/<int:plan_id>')
@@ -892,81 +954,91 @@ def user_complete_train(train_id):
 
 @app.route('/train_progress_start', methods=['POST', 'GET'])
 def train_progress_start():
+    user_id = current_user.id
+
 
     if request.method == 'POST':
         train_id = request.form.get('train_id')
-        user_id = request.form.get('user_id')
 
-        # нужно найти user-train-exercise
-        user_training = UserTraining.query.filter_by(user_id=user_id, training_id=train_id, assigned=True, completed=False).first()
+        # user_id = request.form.get('user_id')
+    if request.method == 'GET':
+        train_id = request.args.get('train_id')
 
-        user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training.id).all()
+    # нужно найти user-train-exercise
+    user_training = UserTraining.query.filter_by(user_id=user_id, training_id=train_id, assigned=True, completed=False).first()
 
-        user_training_exercise = UserTrainingExercise.query.filter_by(user_training_id=user_training.id, completed=False).first()
+    user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training.id).all()
 
-        position = user_training_exercises.index(user_training_exercise)
-        ex_count = len(user_training_exercises)
-        progress_percent = round(position/ex_count*100)
+    user_training_exercise = UserTrainingExercise.query.filter_by(user_training_id=user_training.id, completed=False).first()
 
-        exercise = Exercise.query.get(user_training_exercise.exercise_id)
-        previous_weight = find_prev_weight(exercise.exercise_id, user_id)
-        max_weight = find_max_weight(exercise.exercise_id, user_id)
+    position = user_training_exercises.index(user_training_exercise)
+    ex_count = len(user_training_exercises)
+    progress_percent = round(position/ex_count*100)
+
+    exercise = Exercise.query.get(user_training_exercise.exercise_id)
+    previous_weight = find_prev_weight(exercise.exercise_id, user_id)
+    max_weight = find_max_weight(exercise.exercise_id, user_id)
+
+    ex_loc_names = json.loads(exercise.localized_name)
+    ex_loc_name = ex_loc_names[current_user.language]
+
+
 
     return render_template('current_exercise.html', exercise=exercise, previous_weight=previous_weight,
                            user_training=user_training, user_training_exercise=user_training_exercise,
-                           max_weight=max_weight, progress_percent=progress_percent)
+                           max_weight=max_weight, progress_percent=progress_percent, ex_loc_name=ex_loc_name)
 
 
 @app.route('/train_progress_next', methods=['POST', 'GET'])
 def train_progress_next():
-
     if request.method == 'POST':
         user_training_exercise_id = request.form.get('user_training_exercise_id')
         user_training_id = request.form.get('user_training_id')
-        weight = request.form.get('weight', 0)
-        try:
-            weight = int(weight)
-        except:
-            weight = 0
-        user_training_exercise = UserTrainingExercise.query.get(user_training_exercise_id)
-        user_training_exercise.completed = True
-        user_training_exercise.weight = weight
 
-        try:
-            db.session.commit()
-        except:
-            db.session.rollback()
-            return 'Ошибка: не удалось записать в базу'
+    if request.method == 'GET':
+        user_training_exercise_id = request.args.get('user_training_exercise_id')
+        user_training_id = request.args.get('user_training_id')
 
-        user_training = UserTraining.query.get(user_training_id)
-        train_id = user_training.training_id
-        user_id = user_training.user_id
+    weight = request.form.get('weight', 0)
+    try:
+        weight = int(weight)
+    except:
+        weight = 0
+    user_training_exercise = UserTrainingExercise.query.get(user_training_exercise_id)
+    user_training_exercise.completed = True
+    user_training_exercise.weight = weight
 
-        user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training_id, completed=False, skipped=False).first()
-        if not user_training_exercises:
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        return 'Ошибка: не удалось записать в базу'
 
-            set_train_complete(user_id, train_id)
-            user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training_id).all()
-            finish_data = []
-            for ute in user_training_exercises:
-                ex = Exercise.query.get(ute.exercise_id) # для ссылки на статистику упражнений
-                ex_id = ex.exercise_id
-                ex_name = ex.name
-                ex_skipped = ute.skipped
-                weight = ute.weight
-                finish_data.append({'ex_id':ex_id, 'ex_name':ex_name, 'ex_skipped':ex_skipped, 'weight':weight})
+    user_training = UserTraining.query.get(user_training_id)
+    train_id = user_training.training_id
+    user_id = user_training.user_id
 
-            return render_template('training_finished.html', finish_data=finish_data, train_note='', user_training_id=user_training_id)
+    user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training_id, completed=False, skipped=False).first()
+    if not user_training_exercises:
 
-        url = url_for('train_progress_start', _external=True)  # URL целевого роута
-        payload = {
-            'train_id': train_id,
-            'user_id': user_id
-        }
+        set_train_complete(user_id, train_id)
+        user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training_id).all()
+        finish_data = []
+        for ute in user_training_exercises:
+            ex = Exercise.query.get(ute.exercise_id) # для ссылки на статистику упражнений
+            ex_id = ex.exercise_id
+            loc_ex_names = json.loads(ex.localized_name)
+            ex_name = loc_ex_names[current_user.language]
+            ex_skipped = ute.skipped
+            weight = ute.weight
+            finish_data.append({'ex_id':ex_id, 'ex_name':ex_name, 'ex_skipped':ex_skipped, 'weight':weight})
 
-    response = requests.post(url, data=payload)
+        return render_template('training_finished.html', finish_data=finish_data, train_note='', user_training_id=user_training_id)
 
-    return response.content
+
+
+
+    return redirect(url_for('train_progress_start', _external=True, train_id=train_id))
 
 
 @app.route('/train_progress_skip', methods=['POST', 'GET'])
@@ -984,16 +1056,10 @@ def train_progress_skip():
             db.session.rollback()
             return 'Ошибка: не удалось записать в базу'
 
-    url = url_for('train_progress_next', _external=True)
 
-    payload = {
-        'user_training_exercise_id':user_training_exercise_id,
-        'user_training_id':user_training_id
-    }
 
-    response = requests.post(url, payload)
-
-    return response.content
+    return redirect(url_for('train_progress_next', user_training_exercise_id=user_training_exercise_id,
+                            user_training_id=user_training_id))
 
 
 @app.route('/note_save', methods=['POST', 'GET'])
@@ -1075,7 +1141,9 @@ def statistic_details(user_training_id):
     for ute in user_training_exercises:
         ex = Exercise.query.get(ute.exercise_id)  # для ссылки на статистику упражнений
         ex_id = ex.exercise_id
-        ex_name = ex.name
+        ex_id = ex.exercise_id
+        loc_ex_names = json.loads(ex.localized_name)
+        ex_name = loc_ex_names[current_user.language]
         ex_skipped = ute.skipped
         weight = ute.weight
         finish_data.append({'ex_id': ex_id, 'ex_name': ex_name, 'ex_skipped': ex_skipped, 'weight': weight})
@@ -1153,6 +1221,7 @@ def language_change(lng):
 
 @app.route('/restore_account', methods=['POST', 'GET'])
 def restore_account():
+    default_language = session.get('default_language', 'EN')
     if request.method == 'POST':
         restore_email = request.form.get('restore_email')
         if not is_valid_email(restore_email):
@@ -1171,7 +1240,7 @@ def restore_account():
                 send_email(restore_email, new_password, user.name)
             return redirect('user_login')
 
-    return render_template('/modals/restore_account.html')
+    return render_template('/modals/restore_account.html', default_language=default_language)
 
 
 @app.route('/management')
@@ -1196,7 +1265,9 @@ def ajax_plan_training_view():
 
     for exercise in exercises:
         training_exercises = TrainingExercise.query.filter_by(training_id=train_id, exercise_id=exercise.exercise_id).first()
-        response.append([exercise.name, training_exercises.sets, training_exercises.repetitions])
+        exercise_loc_names = json.loads(exercise.localized_name)
+        exercise_loc_name = exercise_loc_names[current_user.language]
+        response.append([exercise_loc_name, training_exercises.sets, training_exercises.repetitions])
 
     return render_template('/divs/plan_trainings_div.html', response=response)
 
@@ -1253,10 +1324,6 @@ def localization():
 
     return render_template('localization.html', languages=languages, phrases_list=phrases_list, phrase_dict=phrase_dict,
                                phrase_key=phrase_key, sectors=sectors, sector=sector)
-
-
-
-
 
 
 @app.route('/localization_load_phrase/<string:key>')

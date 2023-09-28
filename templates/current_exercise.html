@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}
-Текущее упражнение
+{{local_dict['Exercise'][current_user.language]}}
 {% endblock %}
 
 {% block body %}
@@ -12,13 +12,15 @@
     </div>
 
         <div class="text-center mt-3">
-            <h3>{{exercise.name}}</h3>
+            <h3>{{ex_loc_name}}</h3>
+
         </div>
 
             <hr>
             {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] and max_weight>0%}
             <div class="row ">
                 <div class="col">
+
                     {{local_dict['previous_weight'][current_user.language]}}:
                     {{previous_weight}}
                     {{local_dict['kg'][current_user.language]}}
@@ -32,37 +34,37 @@
             {% endif %}
             {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] %}
             <div class="row mt-4">
-                <div class="col fw-semibold">
+                <div class="col fw-semibold text-center">
                     {{local_dict['Weight_run'][current_user.language]}}
                 </div>
             </div>
             {% endif %}
 
-            <form action="/train_progress_next" method="post">
-                <div class="d-flex">
-
-                    <div class="flex-grow-1 me-3">
+            <div class="">
+                <form action="/train_progress_next" method="post">
+                    <div class="">
                         {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] %}
-                            <input type="number" name="weight" class="form-control" value="0">
+                            <input type="number" name="weight" class="form-control text-center" value="0">
                         {% endif %}
                     </div>
 
-                    <div class="">
-                        <button type="submit" class="btn btn-success">
+                    <div class="rounded-0 text-center mt-3">
+                        <button type="submit" class="btn-next-exercise stretched text-success">
+                            {{local_dict['Done'][current_user.language]}}
                             <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" fill="currentColor" class="bi bi-caret-right" viewBox="0 0 16 16">
                               <path d="M6 12.796V3.204L11.481 8 6 12.796zm.659.753 5.48-4.796a1 1 0 0 0 0-1.506L6.66 2.451C6.011 1.885 5 2.345 5 3.204v9.592a1 1 0 0 0 1.659.753z"/>
                             </svg>
 
                         </button>
                     </div>
-                </div>
-                <input type="hidden" name="ex_id" value="{{exercise.exercise_id}}">
-                <input type="hidden" name="user_training_id" value="{{user_training.id}}">
-                <input type="hidden" name="user_training_exercise_id" value="{{user_training_exercise.id}}">
-            </form>
 
+                    <input type="hidden" name="ex_id" value="{{exercise.exercise_id}}">
+                    <input type="hidden" name="user_training_id" value="{{user_training.id}}">
+                    <input type="hidden" name="user_training_exercise_id" value="{{user_training_exercise.id}}">
+                </form>
+            </div>
 
-            <div class="row mt-4">
+            <div class="row mt-2 m-0">
                     <div class="col rounded-0 p-2 btn-train_progress_start text-center">
                         <a href="/current_train" class="str-link link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
                             <svg xmlns="http://www.w3.org/2000/svg" width="23" height="23" fill="currentColor" class="bi bi-arrow-left-circle" viewBox="0 0 16 16">
