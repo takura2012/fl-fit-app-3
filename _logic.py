@@ -3,6 +3,7 @@ import string
 import json
 from datetime import datetime
 import requests
+from flask import request, flash, session
 from flask_login import current_user
 
 from _models import Exercise, Muscle, Training, ExerciseMuscle, TrainingExercise,\
@@ -353,6 +354,15 @@ def is_valid_email(email):
 
 
 def send_email(target_email, new_password, user_name):
+    localizations = Localization.query.all()
+    default_language = session.get('default_language', 'EN')
+    dict = {}
+    for localization in localizations:
+        key = localization.key
+        translations = json.loads(localization.translations)
+        dict[key] = translations[default_language]
+
+
     # Настройки SMTP сервера Gmail
     smtp_server = 'smtp-relay.sendinblue.com'
     smtp_port = 587
@@ -367,7 +377,7 @@ def send_email(target_email, new_password, user_name):
     message = MIMEMultipart()
     message['From'] = sender_email
     message['To'] = recipient_email
-    message['Subject'] = 'От фитнес-приложения, ваш временный пароль.'
+    message['Subject'] = f"{dict['temporary_password']}"
 
     # Текст письма
     message_text = ''
@@ -377,13 +387,13 @@ def send_email(target_email, new_password, user_name):
         </head>
         <body style="background-color: #FAFAD2;">
         <div>
-            <p>Привет, {user_name}!</p>
-            <p>Вы запросили письмо о восстановлении пароля<p>
-            <p>Ваш новый пароль <strong>{new_password}</strong></p>
-            <p>Не забудьте сменить его в личном кабинете!</p>
+            <p>{dict['Hello']}, {user_name}!</p>
+            <p>{dict['mail_recovery_requested']}<p>
+            <p>{dict['Your_new_password']} <strong>{new_password}</strong></p>
+            <p>{dict['Dont_forget']}!</p>
             <br>
             <br>
-            <p><i>С уважением, разработчики приложения FitApp</i></p>
+            <p><i>{dict['Best_regards']} FitApp</i></p>
         </div>
         </body>
     </html>
@@ -423,3 +433,31 @@ def load_localization_dict():
 
 
     return phrases_list
+
+
+def local_flash(key):
+
+    languages = config.LANGUAGES
+    default_language = 'EN'
+
+    if not current_user or current_user.is_anonymous:
+
+        browser_lang = request.headers.get('Accept-Language')
+
+        langs = browser_lang.split(';')
+        for lang in langs:
+            for defined_lang in languages:
+                if defined_lang.lower() in lang:
+                    default_language = defined_lang
+                    break
+            else:
+                continue
+            break
+    else:
+        default_language = current_user.language
+
+    flash_localizations = Localization.query.filter_by(key=key).first()
+    local_flash_message = json.loads(flash_localizations.translations)
+    flash(local_flash_message[default_language])
+
+    return None

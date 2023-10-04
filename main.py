@@ -23,6 +23,7 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)  # Устанавливаем уровень логгирования (INFO, DEBUG и т. д.)
 logger = logging.getLogger(__name__)
 app.config.from_object('config')
+app.config['LOGIN_VIEW'] = 'index'
 
 db.init_app(app)
 Session(app)
@@ -30,6 +31,7 @@ migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'index'
 
 
 @login_manager.user_loader
@@ -47,6 +49,21 @@ def inject_local_dict():
 @app.route('/user_login', methods=['POST', 'GET'])
 def user_login():
 
+    languages = config.LANGUAGES
+    default_language = 'EN'
+
+    browser_lang = request.headers.get('Accept-Language')
+
+    langs = browser_lang.split(';')
+    for lang in langs:
+        for defined_lang in languages:
+            if defined_lang.lower() in lang:
+                default_language = defined_lang
+                break
+        else:
+            continue
+        break
+
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -55,10 +72,11 @@ def user_login():
 
         if user and check_password_hash(user.password, password):
             login_user(user)
-            # get_language_dict()
             return redirect(url_for('index'))
 
-        flash('Ошибка входа', 'danger')
+        flash_localizations = Localization.query.filter_by(key='Login_error').first()
+        local_flash_message = json.loads(flash_localizations.translations)
+        flash(local_flash_message[default_language])
 
     return redirect(url_for('index'))
 
@@ -79,7 +97,9 @@ def register():
         username = request.form['username']
         password = request.form['password']
         if contains_mixed_alphabets(username) or username.lower() in config.RESERVED_NAMES or 'admin' in username.lower():
-            flash('Недопустимое имя пользователя')
+
+            local_flash('restricted_name')
+
             return redirect('register')
 
         hashed_password = generate_password_hash(password)
@@ -88,14 +108,18 @@ def register():
         user = User.query.filter(conditions).first()
 
         if not user:
-            user = User(name=username, password=hashed_password, email=email)
+            verification = generate_random_password(8)
+            preferences = json.dumps({'follow': True, 'verified': False, 'verification': verification})
+            user = User(name=username, password=hashed_password, email=email, preferences=preferences, language=default_language)
             db.session.add(user)
             try:
                 db.session.commit()
             except:
-                return ('Ошибка добавления пользователя в базу')
+                local_flash('Base_error')
+                return redirect(url_for('register'))
         else:
-            flash('Пользователь с такими данными уже существует')
+            local_flash('Error_existing_user')
+            # flash('Пользователь с такими данными уже существует')
             return redirect('register')
 
         return redirect(url_for('index'))
@@ -133,6 +157,7 @@ def index():
 # ------------------------------------------------BASE----------------------------------------------------------------
 
 @app.route('/list/<string:counters>/del', methods=['POST','GET'])
+@login_required
 def list_del(counters):
     tb = counters[:2]
     counter = counters[2:]
@@ -147,6 +172,7 @@ def list_del(counters):
             exercises = Exercise.query.all()
             return render_template('list.html', exercises=exercises, muscles=muscles)
         except Exception as e:
+            # local_flash('Base_error')
             return f'Ошибка при удалении упражнения из базы: {e}'
     else:
         # muscle = Muscle.query.get_or_404(id)
@@ -161,6 +187,7 @@ def list_del(counters):
 
 
 @app.route('/list/<string:counters>/edit', methods=['POST', 'GET'])
+@login_required
 def list_edit(counters):
     targets = config.TARGETS
     languages = config.LANGUAGES
@@ -262,6 +289,7 @@ def list_edit(counters):
 
 
 @app.route('/list', methods=['POST', 'GET'])
+@login_required
 def list():
     exercises = Exercise.query.all()
     muscles = Muscle.query.all()
@@ -269,6 +297,7 @@ def list():
 
 
 @app.route('/create_exercises', methods=['POST','GET'])
+@login_required
 def create_exercises():
     filters = []
     targets = config.TARGETS
@@ -302,6 +331,7 @@ def create_exercises():
 
 # ------------------------------------------------TRAIN----------------------------------------------------------------
 @app.route('/train_add_ex', methods=['POST', 'GET'])
+@login_required
 def train_add_ex():
 
     if request.method == 'POST':    # при получении данных с формы
@@ -330,7 +360,8 @@ def train_add_ex():
                 db.session.commit()
             except Exception as e:
                 db.session.rollback()
-                return f'Ошибка добавления в базу training_exercise {e}'
+                local_flash('Base_error')
+                return redirect(url_for('edit_train', train_id=train_id))
 
         exercise_filter_list_str = json.dumps(exercise_filter_list)
 
@@ -342,6 +373,7 @@ def train_add_ex():
 
 
 @app.route('/train_del_exercise/<int:train_id>/<int:ex_id>')
+@login_required
 def train_del_exercise(train_id, ex_id):
     if Training.query.get(train_id).owner != current_user.name:
         return redirect(url_for('index'))
@@ -355,22 +387,29 @@ def train_del_exercise(train_id, ex_id):
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            return f'Ошибка: Не удалось удалить из базы -- {e}'
+            local_flash('Base_error')
+            return redirect(url_for('edit_train', train_id=train_id))
+            # return f'Ошибка: Не удалось удалить из базы -- {e}'
     else:
-        return 'TrainingExercise не определено'
+        local_flash('Base_error')
+        return redirect(url_for('edit_train', train_id=train_id))
+        # return 'TrainingExercise не определено'
 
 
     return redirect(url_for('edit_train', train_id=train_id))
 
 
 @app.route('/edit_exercise_in_train/<int:train_id>', methods=['POST', 'GET'])
+@login_required
 def edit_exercise_in_train(train_id):
     try:
         train = Training.query.get(train_id)
         if train.owner != current_user.name:
             return redirect(url_for('index'))
     except:
-        return 'Ошибка: тренировка не найдена'
+        local_flash('Base_error')
+        return redirect(url_for('edit_train', train_id=train_id))
+        # return 'Ошибка: тренировка не найдена'
 
     if request.method == 'POST':
         exercise_id = request.form.get('exercise_id')
@@ -384,12 +423,14 @@ def edit_exercise_in_train(train_id):
         try:
             db.session.commit()
         except:
-            return 'Ошибка: не удалось перезаписать в базу новые данные'
+            # return 'Ошибка: не удалось перезаписать в базу новые данные'
+            local_flash('Base_error')
 
     return redirect(url_for('edit_train', train_id=train.training_id))
 
 
 @app.route("/new_train", methods=['POST', 'GET'])
+@login_required
 def new_train():
 
     languages = config.LANGUAGES
@@ -411,7 +452,9 @@ def new_train():
             db.session.commit()
         except:
             db.session.rollback()
-            return 'Ошибка при создании новой тренировки (не сохранились изменения в базе)'
+            local_flash('Base_error')
+            return redirect(url_for('index'))
+            # return 'Ошибка при создании новой тренировки (не сохранились изменения в базе)'
 
         return redirect(url_for('edit_train', train_id=new_train.training_id))
 
@@ -423,15 +466,19 @@ def new_train():
 
 
 @app.route('/edit_train/<int:train_id>', methods=['POST', 'GET'])
+@login_required
 def edit_train(train_id):
     languages = config.LANGUAGES
     train_local_names = {}
     train = Training.query.get(train_id)  # нахожу тренировку по ID которое передано в роуте
+
     try:
      train_local_names = json.loads(train.local_names)
+     train_local_name = train_local_names[current_user.language]
     except:
         for language in languages:
             train_local_names[language] = ''
+            train_local_name = train.name
 
 
     if train.owner == 'old_training':
@@ -447,6 +494,9 @@ def edit_train(train_id):
         train_data = sorted(unsorted_train_data, key=lambda utd: utd['date'])
 
         return render_template('old_train.html', train_data=train_data)
+
+
+
 
     const_config_filters = config.FILTER_LIST # основные фильтры из конфига (список списков)
     config_filters = []
@@ -510,10 +560,11 @@ def edit_train(train_id):
                            config_filter_targets=config_filter_targets, target_filter=target_filter, total_time=total_time,
                            train_id=train_id, exercise_filter_list_json=exercise_filter_list_json,
                            exercise_localization_names=exercise_localization_names, loc_config_targets=loc_config_targets,
-                           languages=languages, train_local_names=train_local_names)
+                           languages=languages, train_local_names=train_local_names, train_local_name=train_local_name)
 
 
 @app.route('/save_train_localization', methods=['POST'])
+@login_required
 def save_train_localization():
     languages = config.LANGUAGES
     train_local_names = {}
@@ -526,12 +577,13 @@ def save_train_localization():
         db.session.commit()
     except:
         db.session.rollback()
-        flash('Не удалось сохранить данные в базу')
+        local_flash('Base_error')
 
     return redirect(url_for('edit_train', train_id = train_id))
 
 
 @app.route('/train_rename', methods=['POST', 'GET'])
+@login_required
 def train_rename():
     if request.method == 'POST':
 
@@ -539,12 +591,9 @@ def train_rename():
 
         train = Training.query.get(train_id)
         if train.owner != current_user.name:
-            flash('У вас нет права переименовать эту тренировку')
+            local_flash('No_rename_rights')
+            # flash('У вас нет права переименовать эту тренировку')
             return redirect(url_for('edit_train', train_id=train_id))
-
-        if train is None:
-            return 'Ошибка: тренировка для переименования не найдена'
-
 
         train_new_name = request.form.get('train_new_name')
 
@@ -553,13 +602,16 @@ def train_rename():
             db.session.commit()
         except:
             db.session.rollback()
-            return 'Не удалось сохранить в базу тренировку с новым именем'
+            local_flash('Base_error')
+            # return 'Не удалось сохранить в базу тренировку с новым именем'
+            return redirect(url_for('edit_train', train_id=train.training_id))
 
 
     return redirect(url_for('edit_train', train_id=train.training_id))
 
 
 @app.route("/train_delete", methods=['POST', 'GET'])
+@login_required
 def train_delete():
 
     if request.method == 'POST':
@@ -567,7 +619,8 @@ def train_delete():
         train = Training.query.get(train_id)
 
         if train.owner != current_user.name:
-            flash('У вас нет права удалить эту тренировку')
+            # flash('У вас нет права удалить эту тренировку')
+            local_flash('No_delete_rights')
             return redirect(url_for('edit_train', train_id=train_id))
 
         user_training = UserTraining.query.filter_by(training_id=train_id).first()
@@ -576,7 +629,8 @@ def train_delete():
             try:
                 db.session.commit()
             except:
-                flash('Не удалось переместить тренировку в старые')
+                local_flash('Base_error')
+                # flash('Не удалось переместить тренировку в старые')
                 db.session.rollback()
             return redirect(url_for('new_train'))
 
@@ -599,15 +653,18 @@ def train_delete():
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            return f'Ошибка базы данных: Не удалось удалить тренировку {train.name} (id: {train.training_id})или связанные данные.\n {e}'
+            local_flash('Base_error')
+            # return f'Ошибка базы данных: Не удалось удалить тренировку {train.name} (id: {train.training_id})или связанные данные.\n {e}'
 
     return redirect('new_train')
 
 
 @app.route("/del_old_train/<int:train_id>")
+@login_required
 def del_old_train(train_id):
     if current_user.role != 'admin':
-        flash('Операция запрещена: нет прав')
+        # flash('Операция запрещена: нет прав')
+        local_flash('Base_error')
         return redirect(url_for('index'))
 
     train = Training.query.get(train_id)
@@ -631,12 +688,14 @@ def del_old_train(train_id):
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return f'Ошибка базы данных: Не удалось удалить тренировку {train.name} (id: {train.training_id})или связанные данные.\n {e}'
+        local_flash('Base_error')
+        # return f'Ошибка базы данных: Не удалось удалить тренировку {train.name} (id: {train.training_id})или связанные данные.\n {e}'
 
     return redirect(url_for('new_train'))
 
 
 @app.route('/get_exercise_filter_list', methods=['POST', 'GET'])
+@login_required
 def exercise_filter_list():
     config_filters = config.FILTER_LIST
 
@@ -656,6 +715,7 @@ def exercise_filter_list():
 
 # ------------------------------------------------PLANS----------------------------------------------------------------
 @app.route('/plans_all', methods=['POST', 'GET'])
+@login_required
 def plans_all():
     languages = config.LANGUAGES
 
@@ -698,6 +758,7 @@ def plans_all():
 
 
 @app.route('/plan_new/<int:plan_id>', methods=['POST', 'GET'])
+@login_required
 def plan_new(plan_id):
 
     languages = config.LANGUAGES
@@ -746,14 +807,16 @@ def plan_new(plan_id):
             db.session.commit()
         except:
             db.session.rollback()
-            flash('Ошибка при сохранении в базу')
+            # flash('Ошибка при сохранении в базу')
+            local_flash('Base_error')
             return redirect(url_for('plans_all'))
     else:
         plan = Plan.query.get(plan_id)
         if not plan:
             return redirect(url_for('plans_all'))
         if plan.owner != current_user.name:
-            flash('У вас нет прав редактировать этот план!')
+            # flash('Вы не можете редактировать этот план')
+            local_flash('cannot_edit_plan')
             return redirect(url_for('plans_all'))
 
 
@@ -764,6 +827,7 @@ def plan_new(plan_id):
 
 
 @app.route('/save_plan_localization', methods = ['POST'])
+@login_required
 def save_plan_localization():
     languages = config.LANGUAGES
     plan_id = request.form.get('plan_id')
@@ -775,7 +839,8 @@ def save_plan_localization():
         db.session.commit()
     except:
         db.session.rollback()
-        flash('Ошибка сохранения в базу данных')
+        # flash('Ошибка сохранения в базу данных')
+        local_flash('Base_error')
         return redirect(url_for('plans_all'))
 
 
@@ -783,6 +848,7 @@ def save_plan_localization():
 
 
 @app.route('/plan_rename', methods=['POST', 'GET'])
+@login_required
 def plan_rename():
     if request.method == 'POST':
 
@@ -799,12 +865,15 @@ def plan_rename():
             db.session.commit()
         except:
             db.session.rollback()
-            return 'Ошибка : не удалось сохранить в базу новое имя плана'
+            local_flash('Base_error')
+            return redirect(url_for('plan_new', plan_id=plan_id))
+            # 'Ошибка : не удалось сохранить в базу новое имя плана'
 
     return redirect(url_for('plan_new', plan_id=plan_id))
 
 
 @app.route('/plan_delete/<int:plan_id>')
+@login_required
 def plan_delete(plan_id):
     plan = Plan.query.get(plan_id)
     if plan.owner != current_user.name:
@@ -816,18 +885,23 @@ def plan_delete(plan_id):
     try:
         db.session.commit()
     except Exception as e:
-        return f'Ошибка: не удалось удалить связи план-тренировки : {e}'
+        local_flash('Base_error')
+        return redirect(url_for('plans_all'))
+        # f'Ошибка: не удалось удалить связи план-тренировки : {e}'
 
     db.session.delete(plan)
     try:
         db.session.commit()
     except:
-        return f'Ошибка: не удалось удалить план после удаления связей : {e}'
+        local_flash('Base_error')
+        return redirect(url_for('plans_all'))
+        # f'Ошибка: не удалось удалить план после удаления связей : {e}'
 
     return redirect(url_for('plans_all'))
 
 
 @app.route('/plan_add_train', methods=['POST', 'GET'])
+@login_required
 def plan_add_train():
 
     if request.method == 'POST':
@@ -837,7 +911,8 @@ def plan_add_train():
         train = Training.query.get(train_id)
 
         if Plan.query.get(plan_id).owner != current_user.name:
-            flash('У вас нет прав редактировать этот план!')
+            # flash('У вас нет прав редактировать этот план!')
+            local_flash('cannot_edit_plan')
             return redirect(url_for('plans_all'))
 
         # для дубликатов:
@@ -848,18 +923,22 @@ def plan_add_train():
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            return f'Ошибка: не удалось записать в базу добавленные тренировки ---- {e}'
+            local_flash('Base_error')
+            return redirect(url_for('plans_all'))
+            # f'Ошибка: не удалось записать в базу добавленные тренировки ---- {e}'
 
     return redirect(url_for('plan_new', plan_id=plan_id))
 
 
 @app.route('/del_train_from_plan/<int:plan_trainings_id>')
+@login_required
 def del_train_from_plan(plan_trainings_id):
 
     plan_training = Plan_Trainings.query.get(plan_trainings_id)
     plan_id = plan_training.plan_id
     if Plan.query.get(plan_id).owner != current_user.name:
-        flash('У вас нет прав редактировать этот план!')
+        # flash('У вас нет прав редактировать этот план!')
+        local_flash('cannot_edit_plan')
         return redirect(url_for('plans_all'))
 
     db.session.delete(plan_training)
@@ -868,22 +947,27 @@ def del_train_from_plan(plan_trainings_id):
         db.session.commit()
     except:
         db.session.rollback()
-        return 'Ошибка: не удалось удалить связь плана и тренировки'
+        local_flash('Base_error')
+        return redirect(url_for('plans_all'))
+        # 'Ошибка: не удалось удалить связь плана и тренировки'
 
     return redirect(url_for('plan_new', plan_id=plan_id))
 
 
 @app.route('/migration')
+@login_required
 def migration():
     return render_template('migration.html')
 
 
 @app.route('/migration/clear_session')
+@login_required
 def clear_session():
     session.clear()
     return redirect('/')
 
 @app.route('/migration/new_base')
+@login_required
 def migration_new():
     with app.app_context():
         try:
@@ -895,20 +979,26 @@ def migration_new():
 # ------------------------------------------------TRAINING-PROGRESS----------------------------------------------------------------
 
 @app.route('/current_train', methods=['POST', 'GET'])
+@login_required
 def current_train():
 
-
-    if not current_user:
-        flash('Route current_train - usercheck failed, current_user is not defined')
-        return render_template('current_train.html')
+    languages = config.LANGUAGES
 
     all_user_trains = get_user_trains(current_user)
     current_train = get_user_assigned_train(current_user)
 
+
     if not current_train:
         return render_template('current_train.html')
 
+    if current_train.owner == 'admin':
+        train_local_names = json.loads(current_train.local_names)
+        train_local_name = train_local_names[current_user.language]
+    else:
+        train_local_name = current_train.name
+
     current_train_exlist = []
+    workout_started = False
     for exercise in current_train.exercises:
         user_train = UserTraining.query.filter_by(user_id=current_user.id,
                                                   training_id=current_train.training_id,
@@ -920,39 +1010,40 @@ def current_train():
                                                                       ).first()
         ex_loc_names = json.loads(exercise.localized_name)
         ex_loc_name = ex_loc_names[current_user.language]
-        current_train_exlist.append([ex_loc_name, user_training_exercise.sets, user_training_exercise.repetitions, user_training_exercise.weight, user_training_exercise.completed])
+        current_train_exlist.append([ex_loc_name, user_training_exercise.sets, user_training_exercise.repetitions,
+                                     user_training_exercise.weight, user_training_exercise.completed])
 
-    return render_template('current_train.html', current_train=current_train, current_train_exlist=current_train_exlist)
+    return render_template('current_train.html', current_train=current_train, current_train_exlist=current_train_exlist,
+                           train_local_name=train_local_name)
 
 
 @app.route('/assign_training/<int:plan_id>')
+@login_required
 def assign_training(plan_id):
 
     if current_user:
         del_current_user_plan(current_user)
 
         if not assign_plan_to_user(current_user, plan_id):
-            return 'Ошибка assign_plan_to_user'
+            # 'Ошибка assign_plan_to_user'
+            local_flash('Base_error')
 
     return redirect(url_for('index'))
 
 
 @app.route('/user_complete_train/<int:train_id>')
+@login_required
 def user_complete_train(train_id):
-
-    if not current_user:
-        flash('Ошибка в определении пользователя (в сессии нет пользователя)')
-        return redirect(url_for('current_train'))
-    # user = User.query.filter_by(name=current_user_name).first()
 
     res = set_train_complete(current_user.id, train_id)
     if res != 'OK':
-        flash('Ошибка при установке завершения тренировки (запись в базу)')
-
+        # flash('Ошибка при установке завершения тренировки (запись в базу)')
+        local_flash('Base_error')
     return redirect(url_for('index'))
 
 
 @app.route('/train_progress_start', methods=['POST', 'GET'])
+@login_required
 def train_progress_start():
     user_id = current_user.id
 
@@ -970,6 +1061,17 @@ def train_progress_start():
     user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training.id).all()
 
     user_training_exercise = UserTrainingExercise.query.filter_by(user_training_id=user_training.id, completed=False).first()
+
+    workout_started = UserTrainingExercise.query.filter_by(user_training_id=user_training.id, completed=True).first()
+    if not workout_started:
+        start_time = datetime.utcnow()
+        user_training.date_started = start_time
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            local_flash('Base_error')
+            return redirect(url_for('current_train'))
 
     position = user_training_exercises.index(user_training_exercise)
     ex_count = len(user_training_exercises)
@@ -990,6 +1092,7 @@ def train_progress_start():
 
 
 @app.route('/train_progress_next', methods=['POST', 'GET'])
+@login_required
 def train_progress_next():
     if request.method == 'POST':
         user_training_exercise_id = request.form.get('user_training_exercise_id')
@@ -1012,7 +1115,8 @@ def train_progress_next():
         db.session.commit()
     except:
         db.session.rollback()
-        return 'Ошибка: не удалось записать в базу'
+        local_flash('Base_error')
+        return redirect(url_for('index'))
 
     user_training = UserTraining.query.get(user_training_id)
     train_id = user_training.training_id
@@ -1033,7 +1137,8 @@ def train_progress_next():
             weight = ute.weight
             finish_data.append({'ex_id':ex_id, 'ex_name':ex_name, 'ex_skipped':ex_skipped, 'weight':weight})
 
-        return render_template('training_finished.html', finish_data=finish_data, train_note='', user_training_id=user_training_id)
+        return redirect(url_for('statistic_details', user_training_id=user_training.id))
+        # return render_template('training_finished.html', finish_data=finish_data, train_note='', user_training_id=user_training_id)
 
 
 
@@ -1042,6 +1147,7 @@ def train_progress_next():
 
 
 @app.route('/train_progress_skip', methods=['POST', 'GET'])
+@login_required
 def train_progress_skip():
 
     if request.method == 'POST':
@@ -1054,7 +1160,8 @@ def train_progress_skip():
             db.session.commit()
         except:
             db.session.rollback()
-            return 'Ошибка: не удалось записать в базу'
+            local_flash('Base_error')
+            return redirect(url_for('index'))
 
 
 
@@ -1063,6 +1170,7 @@ def train_progress_skip():
 
 
 @app.route('/note_save', methods=['POST', 'GET'])
+@login_required
 def note_save():
     user_training_id = request.form.get('user_training_id')
     train_note = request.form.get('train_note')
@@ -1073,18 +1181,16 @@ def note_save():
         db.session.commit()
     except:
         db.session.rollback()
-        return 'Не удалось сохранить заметку в базу '
+        local_flash('Base_error')
+        # 'Не удалось сохранить заметку в базу '
 
 
     return redirect(url_for('statistic_details', user_training_id=user_training_id))
 
 
 @app.route('/statistics')
+@login_required
 def statistics():
-
-    if not current_user:
-        flash('Пользователь не в системе')
-        return render_template("index.html")
 
     u_utr = UserTraining.query.filter_by(user_id=current_user.id, assigned=True, completed=False).all()
     c_utr = UserTraining.query.filter_by(user_id=current_user.id, assigned=True, completed=True).all()
@@ -1093,22 +1199,28 @@ def statistics():
     for u_tr in u_utr:
         train = Training.query.get(u_tr.training_id)
         if train:
-            uncompleted_trainings.append([train, u_tr.id])
+            local_names = json.loads(train.local_names)
+            local_name = local_names[current_user.language]
+            uncompleted_trainings.append([train, u_tr.id, local_name])
 
     completed_trainings = []
     for c_tr in c_utr:
         train = Training.query.get(c_tr.training_id)
         if train:
+            local_names = json.loads(train.local_names)
+            local_name = local_names[current_user.language]
             # Training, UserTraining.id, количество упражнений, дата завершения
             ex_count=len(train.exercises)
             formatted_datetime = c_tr.date_completed.strftime("%d-%m-%Y %H:%M")
-            completed_trainings.append([train, c_tr.id, ex_count, formatted_datetime ])
+            completed_trainings.append([train, c_tr.id, ex_count, formatted_datetime, local_name])
     completed_trainings.reverse()
 
-    return render_template('statistics.html', uncompleted_trainings=uncompleted_trainings, completed_trainings=completed_trainings, user=current_user)
+    return render_template('statistics.html', uncompleted_trainings=uncompleted_trainings, completed_trainings=completed_trainings,
+                           user=current_user)
 
 
 @app.route('/statistics/delete/<int:user_training_id>')
+@login_required
 def statistic_delete(user_training_id):
 
     user_training = UserTraining.query.get(user_training_id)
@@ -1126,21 +1238,46 @@ def statistic_delete(user_training_id):
         db.session.commit()
     except:
         db.session.rollback()
-        return 'Ошибка: не удалось удалить тренировку'
+        local_flash('Base_error')
+        # 'Ошибка: не удалось удалить тренировку'
 
     return redirect('/statistics')
 
 
 @app.route('/statistics/details/<int:user_training_id>')
+@login_required
 def statistic_details(user_training_id):
     user_training = UserTraining.query.get(user_training_id)
+    if user_training.user_id != current_user.id:
+        local_flash('Base_error')
+        return redirect(url_for('index'))
+    dict = {}
+    unformatteds = Localization.query.all()
+    for unformatted in unformatteds:
+        key = unformatted.key
+        translations = json.loads(unformatted.translations)
+        dict[key] = translations[current_user.language]
+
     train_note = user_training.train_note
+    unformatted_start_time = user_training.date_started
+    start_time = unformatted_start_time.strftime('%d-%m-%y %H:%M')
+
+    unformatted_finish_time = user_training.date_completed
+    finish_time = unformatted_finish_time.strftime('%d-%m-%y %H:%M')
+
+    delta = unformatted_finish_time-unformatted_start_time
+    seconds = delta.seconds
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+
+
+    workout_duration = f'{hours} {dict["hours"]}. {minutes} {dict["minutes"]}. {seconds} {dict["seconds"]}.'
+
     user_training_exercises = UserTrainingExercise.query.filter_by(user_training_id=user_training_id).all()
 
     finish_data = []
     for ute in user_training_exercises:
         ex = Exercise.query.get(ute.exercise_id)  # для ссылки на статистику упражнений
-        ex_id = ex.exercise_id
         ex_id = ex.exercise_id
         loc_ex_names = json.loads(ex.localized_name)
         ex_name = loc_ex_names[current_user.language]
@@ -1148,10 +1285,12 @@ def statistic_details(user_training_id):
         weight = ute.weight
         finish_data.append({'ex_id': ex_id, 'ex_name': ex_name, 'ex_skipped': ex_skipped, 'weight': weight})
 
-    return render_template('training_finished.html', finish_data=finish_data, train_note=train_note, user_training_id=user_training_id)
+    return render_template('training_finished.html', finish_data=finish_data, train_note=train_note, user_training_id=user_training_id,
+                           start_time=start_time, finish_time=finish_time, workout_duration=workout_duration)
 
 
 @app.route('/statistics/exercises', methods=['POST', 'GET'])
+@login_required
 def statistics_exercises():
     no_weight_targets = config.NO_WEIGHT_TARGETS
     if request.method == 'POST':
@@ -1169,18 +1308,22 @@ def statistics_exercises():
 # ---------------------------------------ACCOUNT -------------------------------------------------------------
 
 @app.route('/personal')
+@login_required
 def personal():
     account_types = config.ACCOUNT_TYPES_RU
     languages = config.LANGUAGES
     if not current_user:
         return render_template('management.html')
     user_account_type = account_types[current_user.role]
+    preferences = json.loads(current_user.preferences)
+
     account_color = config.ACCOUNT_COLORS[current_user.role]
     return render_template('personal.html', user=current_user, user_account_type=user_account_type,
-                           account_color=account_color, languages=languages)
+                           account_color=account_color, languages=languages, preferences=preferences)
 
 
 @app.route('/change_password', methods=['POST', 'GET'])
+@login_required
 def change_password():
 
     if request.method == 'POST':
@@ -1196,28 +1339,54 @@ def change_password():
                 current_user.password = hashed_password
                 try:
                     db.session.commit()
-                    flash('Пароль успешно изменен!')
+                    # flash('Пароль успешно изменен!')
+                    local_flash('Password_changed')
                 except:
                     db.session.rollback()
                     flash('Не удалось изменить пароль')
             else:
-                flash('Новый пароль - поля не совпадают')
+                # flash('Новый пароль - поля не совпадают')
+                local_flash('Password_different_fields')
         else:
-            flash('Неверный пароль')
+            # flash('Неверный пароль')
+            local_flash('wrong_password')
 
 
     return redirect(url_for('personal'))
 
 
 @app.route('/language_change/<string:lng>')
+@login_required
 def language_change(lng):
     current_user.language = lng
     try:
         db.session.commit()
     except:
         db.session.rollback()
-        return 'Ошибка при смене языка'
+        local_flash('Base_error')
+         # 'Ошибка при смене языка'
     return redirect(url_for('personal'))
+
+
+@app.route('/follow_change_status', methods = ['POST'])
+@login_required
+def follow_change_status():
+    preferences = json.loads(current_user.preferences)
+    if preferences['follow']:
+        preferences['follow'] = False
+    else:
+        preferences['follow'] = True
+
+    prefs_save = json.dumps(preferences)
+    current_user.preferences = prefs_save
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        return redirect(url_for('personal'))
+
+    return 'True'
+
 
 @app.route('/restore_account', methods=['POST', 'GET'])
 def restore_account():
@@ -1225,9 +1394,11 @@ def restore_account():
     if request.method == 'POST':
         restore_email = request.form.get('restore_email')
         if not is_valid_email(restore_email):
-            flash('Электронная почта введена некорректно')
+            # flash('Электронная почта введена некорректно')
+            local_flash('invalid_email')
         else:
-            flash('Сообщение с восстановлением выслано')
+            # flash('Сообщение с восстановлением выслано')
+            local_flash('recovery_mail_sended')
             user = User.query.filter_by(email=restore_email).first()
             if user:
                 new_password = generate_random_password(8)
@@ -1236,7 +1407,8 @@ def restore_account():
                 try:
                     db.session.commit()
                 except:
-                    flash('Произошла ошибка при восстановлении пароля')
+                    # flash('Произошла ошибка при восстановлении пароля')
+                    local_flash('Base_error')
                 send_email(restore_email, new_password, user.name)
             return redirect('user_login')
 
@@ -1244,6 +1416,7 @@ def restore_account():
 
 
 @app.route('/management')
+@login_required
 def management():
 
     if not current_user:
@@ -1254,6 +1427,7 @@ def management():
 
 
 @app.route('/ajax_plan_training_view', methods=['POST', 'GET'])
+@login_required
 def ajax_plan_training_view():
 
     data = request.get_json()
@@ -1273,6 +1447,7 @@ def ajax_plan_training_view():
 
 
 @app.route('/account')
+@login_required
 def account():
 
     return render_template('account.html')
@@ -1280,6 +1455,7 @@ def account():
 
 # --------------------------LOCALIZATION--------------------------------------------
 @app.route('/localization', methods=['POST', 'GET'])
+@login_required
 def localization():
     languages = config.LANGUAGES
     sectors = config.SECTORS
@@ -1320,13 +1496,14 @@ def localization():
             db.session.commit()
         except:
             db.session.rollback()
-            return 'Ошибка при записи локализации'
+            local_flash('Base_error')
 
     return render_template('localization.html', languages=languages, phrases_list=phrases_list, phrase_dict=phrase_dict,
                                phrase_key=phrase_key, sectors=sectors, sector=sector)
 
 
 @app.route('/localization_load_phrase/<string:key>')
+@login_required
 def localization_load_phrase(key):
 
     return redirect(url_for('localization', key=key))

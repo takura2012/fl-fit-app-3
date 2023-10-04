@@ -130,7 +130,7 @@ class User(db.Model, UserMixin):
     role = db.Column(db.String(80), nullable=False, default='user')
     email = db.Column(db.String(80), unique=True, nullable=False)
     language = db.Column(db.String(20), default='EN')
-    preferences = db.Column(JSON, default=[])
+    preferences = db.Column(db.Text, default=[])
 
     trainings = relationship('UserTraining', back_populates='user')
 

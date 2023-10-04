@@ -22,7 +22,7 @@
     {% for ut in uncompleted_trainings %}
     <div class="row mt-3 text-success fw-semibold">
     <div class="col">
-        {{ ut[0].name }}
+        {{ ut[2] }}
     </div>
 
     </div>
@@ -38,7 +38,7 @@
                 {{ct[3]}}
             </div>
             <div class="col">
-                {{ ct[0].name }}
+                {{ ct[4] }}
             </div>
         </div>
         <div class="row mb-1 text-secondary">
@@ -49,7 +49,7 @@
             </div>
 
             <div class="col">
-                <a href="/statistics/delete/{{ct[1]}}">
+                <a href="/statistics/delete/{{ct[1]}}" class="link-danger">
                     {{local_dict['Delete'][current_user.language]}}
                 </a>
             </div>

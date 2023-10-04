@@ -13,6 +13,9 @@
 
         <div class="text-center mt-3">
             <h3>{{ex_loc_name}}</h3>
+            {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] %}
+            <h3>{{user_training_exercise.sets}}x{{user_training_exercise.repetitions}}</h3>
+            {% endif %}
 
         </div>
 
@@ -44,7 +47,7 @@
                 <form action="/train_progress_next" method="post">
                     <div class="">
                         {% if exercise.target not in ['Кардио', 'Разминка', 'Пресс'] %}
-                            <input type="number" name="weight" class="form-control text-center" value="0">
+                            <input type="number" name="weight" class="form-control text-center" placeholder="0">
                         {% endif %}
                     </div>
 

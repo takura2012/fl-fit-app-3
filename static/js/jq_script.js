@@ -92,7 +92,21 @@ $(document).ready(function() {
     });
 
 
+    $('#chk_follow').on('change', function(){
 
+        $.ajax({
+            url: '/follow_change_status',
+            method: 'POST',
+            success: function(response) {
+                console.log('AjReq - Done')
+            },
+            error: function(error) {
+                console.error('Произошла ошибка:', error);
+            }
+        });
+
+
+    });
 
 
 

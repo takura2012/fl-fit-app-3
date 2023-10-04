@@ -4,22 +4,26 @@
 {% endblock %}
 
 {% block body %}
-<h4>Наполнение базы данных</h4>
-    <hr>
 
-<div class="row">
-    <div class="col-8">
-        <a href="/list" class="fs-5 fw-semibold btn text-primary">Упражнения и мышцы</a>
-        <a href="/create_exercises" class="fs-5 fw-semibold text-primary btn">Создать упражнение</a>
-        <a href="/localization" class="fs-5 fw-semibold btn text-primary">Локализация</a>
-    </div>
-    <div class="col-2">
-        <a href="/migration/clear_session" class="btn fs-5 fw-semibold btn-outline-info">Очистить сессию</a>
-    </div>
-    <div class="col-2">
-        <a href="/migration/new_base" class="btn fs-5 fw-semibold btn-warning">+Таблицы</a>
-    </div>
-</div>
+    {% if current_user.role == "admin" %}
+        <h4>Наполнение базы данных</h4>
+            <hr>
 
+        <div class="row">
+            <div class="col-8">
+                <a href="/list" class="fs-5 fw-semibold btn text-primary">Упражнения и мышцы</a>
+                <a href="/create_exercises" class="fs-5 fw-semibold text-primary btn">Создать упражнение</a>
+                <a href="/localization" class="fs-5 fw-semibold btn text-primary">Локализация</a>
+            </div>
+            <div class="col-2">
+                <a href="/migration/clear_session" class="btn fs-5 fw-semibold btn-outline-info">Очистить сессию</a>
+            </div>
+            <div class="col-2">
+                <a href="/migration/new_base" class="btn fs-5 fw-semibold btn-warning">+Таблицы</a>
+            </div>
+        </div>
+    {% else %}
+        <h1>Здесь ничего нет</h1>
+    {% endif %}
 
 {% endblock %}

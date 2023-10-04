@@ -82,7 +82,7 @@
 <div class="">
      <select name="select_train" id="select_train" class="form-select form-select-md mb-3 me-2" aria-label=".form-select-md example">
         {% for train in trainings %}
-            <option data-owner="{{train.owner}}" value="{{train.training_id}}">{{train.name}}</option>
+            <option data-owner="{{train.owner}}" value="{{train.training_id}}">{{train_local_names[train]}}</option>
         {% endfor %}
     </select>
 </div>
