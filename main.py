@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from collections import Counter
 import json
-import config
+import config, private
 from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, \
     Training, UserTraining, UserTrainingExercise, Plan_Trainings, Localization
 from sqlalchemy import Column, Integer, String, ForeignKey, and_, or_
@@ -95,25 +95,27 @@ def register():
 
     if request.method == 'POST':
         username = request.form['username']
-        password = request.form['password']
         if contains_mixed_alphabets(username) or username.lower() in config.RESERVED_NAMES or 'admin' in username.lower():
 
             local_flash('restricted_name')
 
             return redirect('register')
 
+        password = generate_random_password(8)
         hashed_password = generate_password_hash(password)
         email = request.form['email']
+
         conditions = or_(User.name == username, User.email == email)
         user = User.query.filter(conditions).first()
 
         if not user:
-            verification = generate_random_password(8)
-            preferences = json.dumps({'follow': True, 'verified': False, 'verification': verification})
+            preferences = json.dumps({'follow': True})
             user = User(name=username, password=hashed_password, email=email, preferences=preferences, language=default_language)
             db.session.add(user)
             try:
                 db.session.commit()
+                send_email(email, password, username, 'registration')
+                local_flash('success_register')
             except:
                 local_flash('Base_error')
                 return redirect(url_for('register'))
@@ -133,7 +135,7 @@ def register():
 def index():
     languages = config.LANGUAGES
     default_language = 'EN'
-
+    youtube_link = config.YOUTUBE_LINK
     browser_lang = request.headers.get('Accept-Language')
 
     langs = browser_lang.split(';')
@@ -151,7 +153,8 @@ def index():
     except:
         return render_template("index.html", current_user=current_user, default_language=default_language)
 
-    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user, default_language=default_language)
+    return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user,
+                           default_language=default_language, youtube_link=youtube_link)
 
 
 # ------------------------------------------------BASE----------------------------------------------------------------
@@ -159,6 +162,10 @@ def index():
 @app.route('/list/<string:counters>/del', methods=['POST','GET'])
 @login_required
 def list_del(counters):
+
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+
     tb = counters[:2]
     counter = counters[2:]
     exercises = Exercise.query.all()
@@ -189,6 +196,10 @@ def list_del(counters):
 @app.route('/list/<string:counters>/edit', methods=['POST', 'GET'])
 @login_required
 def list_edit(counters):
+
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+
     targets = config.TARGETS
     languages = config.LANGUAGES
     const_config = {}
@@ -291,6 +302,10 @@ def list_edit(counters):
 @app.route('/list', methods=['POST', 'GET'])
 @login_required
 def list():
+
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+
     exercises = Exercise.query.all()
     muscles = Muscle.query.all()
     return render_template('list.html', exercises = exercises, muscles = muscles)
@@ -963,12 +978,17 @@ def migration():
 @app.route('/migration/clear_session')
 @login_required
 def clear_session():
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
+
     session.clear()
     return redirect('/')
 
 @app.route('/migration/new_base')
 @login_required
 def migration_new():
+    if current_user.role != 'admin':
+        return redirect(url_for('index'))
     with app.app_context():
         try:
             db.create_all()
@@ -1507,6 +1527,25 @@ def localization():
 def localization_load_phrase(key):
 
     return redirect(url_for('localization', key=key))
+
+
+@app.route('/instructions')
+def instructions():
+    languages = config.LANGUAGES
+    default_language = 'EN'
+    browser_lang = request.headers.get('Accept-Language')
+
+    langs = browser_lang.split(';')
+    for lang in langs:
+        for defined_lang in languages:
+            if defined_lang.lower() in lang:
+                default_language = defined_lang
+                break
+        else:
+            continue
+        break
+
+    return render_template('instructions.html', default_language=default_language)
 
 
 if __name__ == '__main__':

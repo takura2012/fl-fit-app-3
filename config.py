@@ -1,5 +1,4 @@
 DEBUG = True
-SECRET_KEY = 'some_ha5sh_#_keyidkK'
 SQLALCHEMY_DATABASE_URI = 'sqlite:///fitness.db'
 SESSION_TYPE = 'filesystem'
 RESERVED_NAMES = ['admin', 'админ', 'old_training']
@@ -86,3 +85,5 @@ FILTER_LIST = [FILTERS_LOCATION, FILTERS_SEX, FILTERS_INVENTORY, FILTERS_TYPE, F
 
 LANGUAGES = ['EN', 'RU', 'UA', 'PL']
 SECTORS = ['Application', 'Exercises', 'Trainings', 'Plans', 'Modals']
+
+YOUTUBE_LINK = 'https://www.youtube.com/watch?v=GilZYY5A8mE'

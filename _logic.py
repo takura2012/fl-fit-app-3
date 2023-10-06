@@ -1,4 +1,4 @@
-import random, config, re
+import random, config, re, private
 import string
 import json
 from datetime import datetime
@@ -353,7 +353,7 @@ def is_valid_email(email):
         return False
 
 
-def send_email(target_email, new_password, user_name):
+def send_email(target_email, new_password, user_name, send_type = 'recovery'):
     localizations = Localization.query.all()
     default_language = session.get('default_language', 'EN')
     dict = {}
@@ -364,10 +364,10 @@ def send_email(target_email, new_password, user_name):
 
 
     # Настройки SMTP сервера Gmail
-    smtp_server = 'smtp-relay.sendinblue.com'
-    smtp_port = 587
-    smtp_username = 'takura2012@gmail.com'
-    smtp_password = 'mTFKgAQc6SVN8s4b'
+    smtp_server = private.SMTP_SERVER
+    smtp_port = private.SMTP_PORT
+    smtp_username = private.SMTP_USERNAME
+    smtp_password = private.SMTP_PASSWORD
 
     # Адрес отправителя и получателя
     sender_email = 'fitness-app@volia.com'
@@ -381,23 +381,43 @@ def send_email(target_email, new_password, user_name):
 
     # Текст письма
     message_text = ''
-    message_html = f"""/
-    <html>
-        <head>
-        </head>
-        <body style="background-color: #FAFAD2;">
-        <div>
-            <p>{dict['Hello']}, {user_name}!</p>
-            <p>{dict['mail_recovery_requested']}<p>
-            <p>{dict['Your_new_password']} <strong>{new_password}</strong></p>
-            <p>{dict['Dont_forget']}!</p>
-            <br>
-            <br>
-            <p><i>{dict['Best_regards']} FitApp</i></p>
-        </div>
-        </body>
-    </html>
-    """
+    if send_type == 'recovery':
+        message_html = f"""/
+        <html>
+            <head>
+            </head>
+            <body style="background-color: #FAFAD2;">
+            <div>
+                <p>{dict['Hello']}, {user_name}!</p>
+                <p>{dict['mail_recovery_requested']}<p>
+                <p>{dict['Your_new_password']} <strong>{new_password}</strong></p>
+                <p>{dict['Dont_forget']}!</p>
+                <br>
+                <br>
+                <p><i>{dict['Best_regards']} FitApp</i></p>
+            </div>
+            </body>
+        </html>
+        """
+    else:
+        message_html = f"""/
+                <html>
+                    <head>
+                    </head>
+                    <body style="background-color: #FAFAD2;">
+                    <div>
+                        <p>{dict['Hello']}, {user_name}!</p>
+                        <p>{dict['applied_registration']}<p>
+                        <p>{dict['Your_new_password']} <strong>{new_password}</strong></p>
+                        <p>{dict['Dont_forget']}!</p>
+                        <br>
+                        <br>
+                        <p><i>{dict['Best_regards']} FitApp</i></p>
+                    </div>
+                    </body>
+                </html>
+                """
+
     textPart = MIMEText(message_text, 'plain')
     htmlPart = MIMEText(message_html, 'html')
     message.attach(textPart)
