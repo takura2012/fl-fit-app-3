@@ -4,6 +4,11 @@
 {% endblock %}
 
 {% block body %}
+        <div class="">
+            <a href="/index" class="me-4">Главная</a>
+            <a href="/create_exercises">Создать новое</a>
+            <hr>
+        </div>
     {% if current_user.role == "admin" %}
         <form method="post">
             <div class="row mb-0 text-left">

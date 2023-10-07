@@ -85,5 +85,3 @@ FILTER_LIST = [FILTERS_LOCATION, FILTERS_SEX, FILTERS_INVENTORY, FILTERS_TYPE, F
 
 LANGUAGES = ['EN', 'RU', 'UA', 'PL']
 SECTORS = ['Application', 'Exercises', 'Trainings', 'Plans', 'Modals']
-
-YOUTUBE_LINK = 'https://www.youtube.com/watch?v=GilZYY5A8mE'

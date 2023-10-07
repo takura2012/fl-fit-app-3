@@ -5,6 +5,13 @@
 
 {% block body %}
     {% if current_user.role == "admin" %}
+        <div class="">
+            <a href="/index" class="me-4">Главная</a>
+            <a href="/list">Назад</a>
+        </div>
+
+         <hr>
+
         <div class="row mb-0">
             <div class="col-6">
                 <h3> Редактирование :</h3>

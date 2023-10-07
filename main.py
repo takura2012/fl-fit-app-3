@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from collections import Counter
 import json
-import config, private
+import config
 from _models import Exercise, Muscle, ExerciseMuscle, db, User, Plan, TrainingExercise, \
     Training, UserTraining, UserTrainingExercise, Plan_Trainings, Localization
 from sqlalchemy import Column, Integer, String, ForeignKey, and_, or_
@@ -317,6 +317,7 @@ def create_exercises():
     filters = []
     targets = config.TARGETS
     config_filters = config.FILTER_LIST
+    languages = config.LANGUAGES
     if request.method == 'POST':
         name = request.form['name']
         target = request.form['select_target']
@@ -329,8 +330,14 @@ def create_exercises():
             if any(sublist for sublist in form_list if sublist):
                 filters += form_list
 
+        default_local_set = {}
+        for language in languages:
+            default_local_set[language] = 'No localization data'
+
+        localized_name = json.dumps(default_local_set)
+
         exercise = Exercise(name = name, target=target, description = description, difficulty = difficulty,
-                            time_per_set = time_per_set, filters=filters)
+                            time_per_set = time_per_set, filters=filters, localized_name=localized_name)
 
         try:
             db.session.add(exercise)
@@ -559,6 +566,7 @@ def edit_train(train_id):
         exercises = filtered_exercises  # если фильтр -1 (все) то не фильтрую
 
     exercise_localization_names = [json.loads(ex.localized_name) for ex in exercises]
+
     # print(exercise_localization_names)
 
     if train:
@@ -972,7 +980,18 @@ def del_train_from_plan(plan_trainings_id):
 @app.route('/migration')
 @login_required
 def migration():
-    return render_template('migration.html')
+
+    if current_user.role == 'admin':
+        user_admin = User.query.filter_by(name='admin').first()
+
+        prefs = json.loads(user_admin.preferences)
+        youtube_link = prefs.get('youtube_link','')
+        smtp_server = prefs['SMTP_SERVER']
+        smtp_port = prefs['SMTP_PORT']
+        smtp_username = prefs['SMTP_USERNAME']
+        smtp_password = prefs['SMTP_PASSWORD']
+
+    return render_template('migration.html', prefs=prefs)
 
 
 @app.route('/migration/clear_session')
@@ -995,6 +1014,35 @@ def migration_new():
             return '<h2>Таблицы добавлены</h2>'
         except Exception as e:
             return f'<h2>Ошибка: {str(e)}</h2>'
+
+
+@app.route('/set_admin_prefs', methods=['GET', 'POST'])
+@login_required
+def set_admin_prefs():
+    youtube_link = request.form.get('youtube_link', '')
+    SMTP_SERVER = request.form.get('SMTP_SERVER', '')
+    SMTP_PORT = request.form.get('SMTP_PORT', '')
+    SMTP_USERNAME = request.form.get('SMTP_USERNAME', '')
+    SMTP_PASSWORD = request.form.get('SMTP_PASSWORD', '')
+    SECRET_KEY = request.form.get('SECRET_KEY', '')
+
+    user_prefs = json.loads(current_user.preferences)
+    user_prefs['youtube_link'] = youtube_link
+    user_prefs['SMTP_SERVER'] = SMTP_SERVER
+    user_prefs['SMTP_PORT'] = SMTP_PORT
+    user_prefs['SMTP_USERNAME'] = SMTP_USERNAME
+    user_prefs['SMTP_PASSWORD'] = SMTP_PASSWORD
+    user_prefs['SECRET_KEY'] = SECRET_KEY
+
+    current_user.preferences = json.dumps(user_prefs)
+
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+        local_flash('Base_error')
+
+    return redirect(url_for('migration'))
 
 # ------------------------------------------------TRAINING-PROGRESS----------------------------------------------------------------
 
@@ -1534,6 +1582,9 @@ def instructions():
     languages = config.LANGUAGES
     default_language = 'EN'
     browser_lang = request.headers.get('Accept-Language')
+    user_admin = User.query.filter_by(name='admin').first()
+    user_prefs = json.loads(user_admin.preferences)
+    youtube_link = user_prefs['youtube_link']
 
     langs = browser_lang.split(';')
     for lang in langs:
@@ -1545,7 +1596,7 @@ def instructions():
             continue
         break
 
-    return render_template('instructions.html', default_language=default_language)
+    return render_template('instructions.html', default_language=default_language, youtube_link=youtube_link)
 
 
 if __name__ == '__main__':

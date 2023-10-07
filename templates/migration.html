@@ -6,9 +6,14 @@
 {% block body %}
 
     {% if current_user.role == "admin" %}
-        <h4>Наполнение базы данных</h4>
-            <hr>
+        <div class="">
+            <h4>Наполнение базы данных</h4>
+        </div>
 
+        <div class="">
+            <a href="/index">Главная</a>
+            <hr>
+        </div>
         <div class="row">
             <div class="col-8">
                 <a href="/list" class="fs-5 fw-semibold btn text-primary">Упражнения и мышцы</a>
@@ -22,8 +27,34 @@
                 <a href="/migration/new_base" class="btn fs-5 fw-semibold btn-warning">+Таблицы</a>
             </div>
         </div>
+<hr>
+            <a class="btn btn-primary" data-bs-toggle="collapse" href="#advansed_settings" role="button" aria-expanded="false" aria-controls="advansed_settings">
+                Настройки сервера
+              </a>
+
+
+            <div class="collapse" id="advansed_settings">
+              <div class="card card-body">
+                <form action="/set_admin_prefs" method="post">
+                    <div class="">
+                        <input type="text" name="youtube_link" class="form-control" value="{{prefs.youtube_link}}">
+                        <input type="text" name="SMTP_SERVER" class="form-control" placeholder="SMTP_SERVER" value="{{prefs.SMTP_SERVER}}">
+                        <input type="text" name="SMTP_PORT" class="form-control" placeholder="SMTP_PORT" value="{{prefs.SMTP_PORT}}">
+                        <input type="text" name="SMTP_USERNAME" class="form-control" placeholder="SMTP_USERNAME" value="{{prefs.SMTP_USERNAME}}">
+                        <input type="text" name="SMTP_PASSWORD" class="form-control" placeholder="SMTP_PASSWORD" value="{{prefs.SMTP_PASSWORD}}">
+                        <input type="text" name="SECRET_KEY" class="form-control" placeholder="SECRET_KEY" value="{{prefs.SECRET_KEY}}">
+
+                    </div>
+                    <input type="submit" class="btn btn-success" value="Сохранить">
+                </form>
+              </div>
+            </div>
+
     {% else %}
         <h1>Здесь ничего нет</h1>
     {% endif %}
 
 {% endblock %}
+
+
+

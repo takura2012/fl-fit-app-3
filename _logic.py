@@ -1,4 +1,4 @@
-import random, config, re, private
+import random, config, re
 import string
 import json
 from datetime import datetime
@@ -362,12 +362,14 @@ def send_email(target_email, new_password, user_name, send_type = 'recovery'):
         translations = json.loads(localization.translations)
         dict[key] = translations[default_language]
 
+    user_admin = User.query.filter_by(name='admin').first()
+    prefs = json.loads(user_admin.preferences)
 
     # Настройки SMTP сервера Gmail
-    smtp_server = private.SMTP_SERVER
-    smtp_port = private.SMTP_PORT
-    smtp_username = private.SMTP_USERNAME
-    smtp_password = private.SMTP_PASSWORD
+    smtp_server = prefs['SMTP_SERVER']
+    smtp_port = prefs['SMTP_PORT']
+    smtp_username = prefs['SMTP_USERNAME']
+    smtp_password = prefs['SMTP_PASSWORD']
 
     # Адрес отправителя и получателя
     sender_email = 'fitness-app@volia.com'
