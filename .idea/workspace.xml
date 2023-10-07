@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="20bf0141-6a8f-4b3a-9785-5386a8c13e19" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="PUSH_TAGS">
+      <GitPushTagMode>
+        <option name="argument" value="--tags" />
+        <option name="title" value="All" />
+      </GitPushTagMode>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/main.py" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="2RuwJSSJtWGxV9QOJldZ7KrUxty" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/programming/flask/dbase/static/flags&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.toDoOptions&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\programming\flask\dbase\static\flags" />
+      <recent name="D:\programming\flask\dbase\static\imgs" />
+      <recent name="D:\programming\flask\dbase\templates\modals" />
+      <recent name="D:\programming\flask\dbase\templates" />
+      <recent name="D:\programming\flask\dbase\instance\save_base" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\programming\flask\dbase" />
+      <recent name="D:\programming\flask\dbase\venv" />
+      <recent name="D:\programming\flask\dbase\instance\save_base" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.main">
+    <configuration name="_logic" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="dbase" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="D:\programming\flask\dbase\_logic.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="_models" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="dbase" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_models.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="dbase" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="D:\programming\flask\dbase\venv\Scripts\python.exe" />
+      <option name="SDK_NAME" value="Python 3.11 (dbase)" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.main" />
+      <item itemvalue="Python._logic" />
+      <item itemvalue="Python._models" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python._models" />
+        <item itemvalue="Python._logic" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="20bf0141-6a8f-4b3a-9785-5386a8c13e19" name="Changes" comment="" />
+      <created>1688113201982</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1688113201982</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Продолжаю работу над редактированием тренировок, сделаны фильтры упражнений, все стабильно">
+      <option name="closed" value="true" />
+      <created>1691755829856</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1691755829856</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Сделано добавление упражнений в тренировки, убран лишний код, добавлены комментарии">
+      <option name="closed" value="true" />
+      <created>1691843693038</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1691843693038</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Страница тренировок: полностью сделан функционал. Убраны переменные сессий для надежности. Добавлено создание тренировки с ИД в имени, если одинаковые имена.">
+      <option name="closed" value="true" />
+      <created>1692104789068</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1692104789068</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Сделаны классы User и связи его с тренировками и далее">
+      <option name="closed" value="true" />
+      <created>1692192545871</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1692192545871</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Начаты планы">
+      <option name="closed" value="true" />
+      <created>1692287012827</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1692287012827</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Добавлено в функционалы планов - создание, редактирование, просмотр, отображение и запись дублей.">
+      <option name="closed" value="true" />
+      <created>1692366598492</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1692366598492</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Полностью сделан функционал планов, немного добавлено визуализации на планах">
+      <option name="closed" value="true" />
+      <created>1692445583574</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1692445583574</updated>
+    </task>
+    <task id="LOCAL-00008" summary="не нужный">
+      <option name="closed" value="true" />
+      <created>1692771429645</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1692771429645</updated>
+    </task>
+    <task id="LOCAL-00009" summary="вывод первой тренировки пользователя, обработка ошибок на странице пользователя">
+      <option name="closed" value="true" />
+      <created>1692794468036</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1692794468036</updated>
+    </task>
+    <task id="LOCAL-00010" summary="главная страница, немного статистика, в планах делать выполнение тренировки">
+      <option name="closed" value="true" />
+      <created>1692878517801</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1692878517801</updated>
+    </task>
+    <task id="LOCAL-00011" summary="в планах сделать кнопку пропустить , обработать веса">
+      <option name="closed" value="true" />
+      <created>1692968561832</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1692968561832</updated>
+    </task>
+    <task id="LOCAL-00012" summary="сделано: пропустить, веса, статистика-просмотр, статистика-дата завершения, отмечены выполненные и пропущенные">
+      <option name="closed" value="true" />
+      <created>1693050154667</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1693050154667</updated>
+    </task>
+    <task id="LOCAL-00013" summary="сделана статистика, в планах убрать верхнее меню и перенести часть функций в управление (может переназвать его)&#10;после этого можно делать пользователей">
+      <option name="closed" value="true" />
+      <created>1693394798605</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1693394798605</updated>
+    </task>
+    <task id="LOCAL-00014" summary="убрал верхнее меню, добавил переходы">
+      <option name="closed" value="true" />
+      <created>1693490195605</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1693490195605</updated>
+    </task>
+    <task id="LOCAL-00015" summary="убрал верхнее меню, добавил переходы">
+      <option name="closed" value="true" />
+      <created>1693660639999</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1693660639999</updated>
+    </task>
+    <task id="LOCAL-00016" summary="исправил баги с разделением пользователей, добавил секьюрити">
+      <option name="closed" value="true" />
+      <created>1693912992114</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1693912992114</updated>
+    </task>
+    <task id="LOCAL-00017" summary="сделал выбор тренировок и планов раздельными. следующее: сделать добавление тренировки в план по другому">
+      <option name="closed" value="true" />
+      <created>1694167035755</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1694167035755</updated>
+    </task>
+    <task id="LOCAL-00018" summary="сделал добавить и удалить тренировку из плана. сделал заметку для тренировки">
+      <option name="closed" value="true" />
+      <created>1694361126491</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1694361126491</updated>
+    </task>
+    <task id="LOCAL-00019" summary="сделано много работы, восстановление почты, личный кабинет">
+      <option name="closed" value="true" />
+      <created>1694871168647</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1694871168647</updated>
+    </task>
+    <task id="LOCAL-00020" summary="сделано много работы, восстановление почты, личный кабинет">
+      <option name="closed" value="true" />
+      <created>1695454950464</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1695454950464</updated>
+    </task>
+    <task id="LOCAL-00021" summary="коммит после глюка">
+      <option name="closed" value="true" />
+      <created>1695455223638</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1695455223638</updated>
+    </task>
+    <task id="LOCAL-00022" summary="локализация интерфейса">
+      <option name="closed" value="true" />
+      <created>1695475582821</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1695475582821</updated>
+    </task>
+    <task id="LOCAL-00023" summary="локализация тренировок и планов. осталось не так много">
+      <option name="closed" value="true" />
+      <created>1695905940960</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1695905940960</updated>
+    </task>
+    <task id="LOCAL-00024" summary="все переведено, включая письмо. мелкие исправления. сделана безопасность на контент требующий логина.">
+      <option name="closed" value="true" />
+      <created>1696420362917</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1696420362917</updated>
+    </task>
+    <task id="LOCAL-00025" summary="private">
+      <option name="closed" value="true" />
+      <created>1696590392889</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1696590392889</updated>
+    </task>
+    <task id="LOCAL-00026" summary="time to deploy?">
+      <option name="closed" value="true" />
+      <created>1696678075297</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1696678075297</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="true" />
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Продолжаю работу над редактированием тренировок, сделаны фильтры упражнений, все стабильно" />
+    <MESSAGE value="Сделано добавление упражнений в тренировки, убран лишний код, добавлены комментарии" />
+    <MESSAGE value="Страница тренировок: полностью сделан функционал. Убраны переменные сессий для надежности. Добавлено создание тренировки с ИД в имени, если одинаковые имена." />
+    <MESSAGE value="Сделаны классы User и связи его с тренировками и далее" />
+    <MESSAGE value="Начаты планы" />
+    <MESSAGE value="Добавлено в функционалы планов - создание, редактирование, просмотр, отображение и запись дублей." />
+    <MESSAGE value="Полностью сделан функционал планов, немного добавлено визуализации на планах" />
+    <MESSAGE value="не нужный" />
+    <MESSAGE value="вывод первой тренировки пользователя, обработка ошибок на странице пользователя" />
+    <MESSAGE value="главная страница, немного статистика, в планах делать выполнение тренировки" />
+    <MESSAGE value="в планах сделать кнопку пропустить , обработать веса" />
+    <MESSAGE value="сделано: пропустить, веса, статистика-просмотр, статистика-дата завершения, отмечены выполненные и пропущенные" />
+    <MESSAGE value="сделана статистика, в планах убрать верхнее меню и перенести часть функций в управление (может переназвать его)&#10;после этого можно делать пользователей" />
+    <MESSAGE value="убрал верхнее меню, добавил переходы" />
+    <MESSAGE value="исправил баги с разделением пользователей, добавил секьюрити" />
+    <MESSAGE value="сделал выбор тренировок и планов раздельными. следующее: сделать добавление тренировки в план по другому" />
+    <MESSAGE value="сделал добавить и удалить тренировку из плана. сделал заметку для тренировки" />
+    <MESSAGE value="сделано много работы, восстановление почты, личный кабинет" />
+    <MESSAGE value="коммит после глюка" />
+    <MESSAGE value="локализация интерфейса" />
+    <MESSAGE value="локализация тренировок и планов. осталось не так много" />
+    <MESSAGE value="все переведено, включая письмо. мелкие исправления. сделана безопасность на контент требующий логина." />
+    <MESSAGE value="private" />
+    <MESSAGE value="time to deploy?" />
+    <option name="LAST_COMMIT_MESSAGE" value="time to deploy?" />
+  </component>
+</project>
