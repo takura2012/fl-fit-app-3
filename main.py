@@ -1,5 +1,5 @@
 from flask import Flask, render_template, url_for, request, redirect, session, flash, jsonify
-from flask_migrate import Migrate
+# from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from collections import Counter
 import json
@@ -27,7 +27,7 @@ app.config['LOGIN_VIEW'] = 'index'
 
 db.init_app(app)
 Session(app)
-migrate = Migrate(app, db)
+# migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -1608,4 +1608,4 @@ if __name__ == '__main__':
     #         db.create_all()
     #     except Exception as e:
     #         print(e)
-    app.run(debug=True)
+    app.run()
