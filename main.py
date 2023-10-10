@@ -135,7 +135,6 @@ def register():
 def index():
     languages = config.LANGUAGES
     default_language = 'EN'
-    youtube_link = config.YOUTUBE_LINK
     browser_lang = request.headers.get('Accept-Language')
 
     langs = browser_lang.split(';')
@@ -154,7 +153,7 @@ def index():
         return render_template("index.html", current_user=current_user, default_language=default_language)
 
     return render_template("index.html", uncompleted_user_trainings=uncompleted_user_trainings, current_user=current_user,
-                           default_language=default_language, youtube_link=youtube_link)
+                           default_language=default_language)
 
 
 # ------------------------------------------------BASE----------------------------------------------------------------
