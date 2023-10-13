@@ -109,8 +109,13 @@ def register():
         user = User.query.filter(conditions).first()
 
         if not user:
-            preferences = json.dumps({'follow': True})
-            user = User(name=username, password=hashed_password, email=email, preferences=preferences, language=default_language)
+
+            date_registration = datetime.utcnow()
+            date_last_activity = date_registration
+            user_time_offset = int(request.form.get('user_time_offset'))
+            preferences = json.dumps({'follow': True, 'user_time_offset': user_time_offset})
+            user = User(name=username, password=hashed_password, email=email, preferences=preferences,
+                        language=default_language, date_registration=date_registration, date_last_activity=date_last_activity)
             db.session.add(user)
             try:
                 db.session.commit()
@@ -147,6 +152,14 @@ def index():
             continue
         break
     session['default_language'] = default_language
+
+    if not current_user.is_anonymous:
+        current_user.date_last_activity = datetime.utcnow()
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+
     try:
         uncompleted_user_trainings = UserTraining.query.filter_by(user_id=current_user.id, assigned=True, completed=False).all()
     except:
@@ -1596,6 +1609,42 @@ def instructions():
         break
 
     return render_template('instructions.html', default_language=default_language, youtube_link=youtube_link)
+
+# ------------------------------------------------ADMIN-------------------------------------
+
+@app.route('/users_administration')
+def users_administration():
+
+    users = User.query.all()
+    users_count = len(users)
+
+    sorted_users = sorted(users, key=lambda user: user.date_registration, reverse=True)
+
+    structured_users = {}
+
+    for user in sorted_users:
+        structured_user = {}
+
+        user_prefs = json.loads(user.preferences)
+        local_time_offset = user_prefs.get('user_time_offset', 0)
+        structured_user['id'] = user.id
+        structured_user['name'] = user.name
+        structured_user['email'] = user.email
+        structured_user['role'] = user.role
+        structured_user['language'] = user.language
+        structured_user['date_registration'] = user.date_registration.strftime('%d-%m-%y %H:%M')
+        structured_user['date_last_activity'] = user.date_last_activity.strftime('%d-%m-%y %H:%M')
+        structured_user['local_time_offset'] = local_time_offset
+
+        date_registration_short = user.date_registration.strftime('%d-%m-%y')
+
+        try:
+            structured_users[date_registration_short].append(structured_user)
+        except:
+            structured_users[date_registration_short] = []
+            structured_users[date_registration_short].append(structured_user)
+
+    return render_template('users.html', structured_users=structured_users, users_count=users_count)
 
 
 if __name__ == '__main__':
